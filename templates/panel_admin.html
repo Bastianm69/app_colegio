@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <title>Panel de Administrador - Sistema Escolar</title>
+
+    <style>
+        /* Estilos base para que todo se vea bien */
+        body.admin-body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Barra de navegación adaptable */
+        .admin-navbar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between; /* Separa logo de botón */
+            align-items: center;
+            flex-wrap: wrap; /* Permite que los elementos bajen si no caben */
+        }
+
+        .admin-navbar h2 { margin: 0; font-size: 1.5rem; }
+
+        /* Botón de cerrar sesión */
+        .btn-logout {
+            background-color: #e74c3c;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        /* Contenedor principal centrado */
+        .admin-main-content {
+            flex: 1; /* Ocupa el espacio restante */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Títulos */
+        .admin-header h3 { font-size: 2rem; color: #333; margin-bottom: 5px; }
+        .admin-header p { color: #666; font-size: 1.1rem; }
+
+        /* Contenedor de botones de acción */
+        .admin-actions {
+            display: flex;
+            gap: 20px; /* Espacio entre botones */
+            margin-top: 30px;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+            flex-wrap: wrap; /* Los botones se ponen uno abajo del otro en móviles */
+        }
+
+        /* Diseño de los botones grandes */
+        .btn-action {
+            background-color: white;
+            color: #2c3e50;
+            text-decoration: none;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1; /* Los botones crecen igual */
+            min-width: 200px; /* Tamaño mínimo para que no se vean flacos */
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            border-color: #3498db;
+        }
+
+        .icon { font-size: 3rem; margin-bottom: 10px; }
+
+        /* --- MEDIA QUERIES (Aquí ocurre la magia responsive) --- */
+        
+        /* Para tablets y celulares (pantallas menores a 768px) */
+        @media (max-width: 768px) {
+            .admin-navbar {
+                justify-content: center; /* Centra todo en móviles */
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .admin-header h3 { font-size: 1.5rem; }
+            
+            .admin-actions {
+                flex-direction: column; /* Botones uno encima del otro */
+                align-items: center;
+            }
+
+            .btn-action {
+                width: 80%; /* Botones más anchos en móvil */
+            }
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <nav class="admin-navbar">
+        <div class="logo">
+            <h2>Sistema Escolar - Admin</h2>
+        </div>
+        <div>
+            <a href="/logout" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="admin-main-content">
+        <div class="admin-header">
+            <h3>Bienvenido, Administrador</h3>
+            <p>¿Qué deseas hacer hoy?</p>
+        </div>
+
+        <div class="admin-actions">
+            
+            <a href="/añadir-docente" class="btn-action">
+                <span class="icon">👨‍🏫</span>
+                <strong>Añadir Docente</strong>
+            </a>
+
+            <a href="/añadir-alumno" class="btn-action">
+                <span class="icon">🎓</span>
+                <strong>Añadir Alumno</strong>
+            </a>
+
+        </div>
+    </main>
+
+</body>
+</html>

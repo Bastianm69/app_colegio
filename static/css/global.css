@@ -1,0 +1,14 @@
+/* =========================================
+   RESET Y VARIABLES GLOBALES
+   ========================================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f4f8; /* Gris azulado muy suave de fondo */
+    color: #2d3748;
+}

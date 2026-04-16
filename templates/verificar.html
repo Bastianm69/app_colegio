@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Código - Sistema Escolar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    
+    <style>
+        /* Estilos base para centrar el contenido */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Contenedor tipo tarjeta (Card) */
+        .verify-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px; /* Ancho máximo en PC */
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        /* Icono de seguridad o correo */
+        .icon-header {
+            font-size: 50px;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 22px;
+        }
+
+        p {
+            color: #7f8c8d;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        /* Estilo para el input de los 6 dígitos */
+        .code-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 24px; /* Letras grandes para que sea fácil de leer */
+            letter-spacing: 8px; /* Espaciado entre números para estilo de "token" */
+            text-align: center;
+            border: 2px solid #dcdde1;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .code-input:focus {
+            border-color: #3498db;
+            background-color: #f9fbff;
+        }
+
+        /* Botón de acción principal */
+        .btn-verify {
+            width: 100%;
+            padding: 14px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-verify:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Mensaje de error (Jinja2) */
+        .error-msg {
+            background-color: #fdeaea;
+            color: #e74c3c;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Enlace de ayuda */
+        .resend-link {
+            display: block;
+            margin-top: 25px;
+            font-size: 13px;
+            color: #95a5a6;
+            text-decoration: none;
+        }
+
+        .resend-link:hover {
+            text-decoration: underline;
+            color: #3498db;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 480px) {
+            .verify-container {
+                padding: 30px 20px;
+                box-shadow: none; /* Se ve más limpio sin sombras en el celular */
+                border-radius: 0;
+                width: 100%;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            h2 { font-size: 20px; }
+            .code-input { font-size: 20px; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="verify-container">
+        <div class="icon-header">🔐</div>
+
+        <h2>Autorización Requerida</h2>
+        <p>Por seguridad, ingresa el código de 6 dígitos que enviamos a tu bandeja de entrada.</p>
+
+        {% if error %}
+            <div class="error-msg">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            <input type="text" 
+                   name="codigo" 
+                   class="code-input" 
+                   placeholder="000000" 
+                   required 
+                   maxlength="6" 
+                   autocomplete="one-time-code" 
+                   inputmode="numeric">
+
+            <button type="submit" class="btn-verify">Verificar e Iniciar Sesión</button>
+        </form>
+
+        <a href="/login" class="resend-link">¿No recibiste el código? Volver al inicio</a>
+    </div>
+
+</body>
+</html>

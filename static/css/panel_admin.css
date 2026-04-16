@@ -1,0 +1,120 @@
+/* =========================================
+   ESTILOS EXCLUSIVOS DEL PANEL DE ADMINISTRADOR
+   ========================================= */
+.admin-body {
+    display: block; 
+}
+
+/* Barra de Navegación */
+.admin-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1a365d;
+    padding: 15px 40px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.admin-navbar .logo h2 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn-logout {
+    background-color: #e53e3e;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-logout:hover {
+    background-color: #c53030;
+    transform: translateY(-2px);
+}
+
+/* Contenido Principal */
+.admin-main-content {
+    max-width: 1000px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.admin-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.admin-header h1 {
+    color: #2d3748;
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.admin-header p {
+    color: #718096;
+    font-size: 18px;
+}
+
+/* Tarjetas de Acción */
+.admin-actions {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    width: 240px;
+    height: 180px;
+    text-decoration: none;
+    color: #4a5568;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 16px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    border-color: #3182ce;
+    color: #3182ce;
+}
+
+.btn-action .icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    transition: transform 0.3s;
+}
+
+.btn-action:hover .icon {
+    transform: scale(1.1);
+}
+
+/* Responsividad para móviles */
+@media (max-width: 600px) {
+    .admin-navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 20px;
+        text-align: center;
+    }
+    
+    .btn-action {
+        width: 100%;
+        max-width: 300px;
+    }
+}
