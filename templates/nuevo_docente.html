@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Añadir Docente - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/nuevo_docente.css') }}">
+</head>
+<body>
+
+    <div class="form-wrapper">
+        <h2>👨‍🏫 Registrar Nuevo Docente</h2>
+
+        {% if msg %}
+            <div class="alert" style="background-color: {{ color }};">
+                {{ msg }}
+            </div>
+        {% endif %}
+
+        <form action="{{ url_for('admin_bp.nuevo_docente') }}" method="POST">
+            <div class="grid-container">
+                
+                <h3 class="section-title">1. Credenciales de Acceso</h3>
+                
+                <div class="input-group">
+                    <label>Nombre de Usuario</label>
+                    <input type="text" name="nombre_usuario" placeholder="ej: k.matta" required>
+                </div>
+                <div class="input-group">
+                    <label>Contraseña Temporal</label>
+                    <input type="password" name="password" placeholder="********" required>
+                </div>
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label>Correo Electrónico</label>
+                    <input type="email" name="email" placeholder="correo@institucion.cl" required>
+                </div>
+
+                <h3 class="section-title">2. Ficha Personal</h3>
+                
+                <div class="input-group">
+                    <label>RUT (Con guion)</label>
+                    <input type="text" name="rut" placeholder="12345678-9" required maxlength="12">
+                </div>
+                <div class="input-group">
+                    <label>Nombres</label>
+                    <input type="text" name="nombres" required>
+                </div>
+                <div class="input-group">
+                    <label>Apellido Paterno</label>
+                    <input type="text" name="apellido_paterno" required>
+                </div>
+                <div class="input-group">
+                    <label>Apellido Materno</label>
+                    <input type="text" name="apellido_materno" required>
+                </div>
+                <div class="input-group">
+                    <label>Especialidad / Nivel</label>
+                    <input type="text" name="especialidad_nivel" placeholder="Ej: Matemáticas" required>
+                </div>
+                <div class="input-group">
+                    <label>Teléfono de Contacto</label>
+                    <input type="text" name="fono" placeholder="+569...">
+                </div>
+
+                <h3 class="section-title">3. Prevención y Salud</h3>
+
+                <div class="input-group">
+                    <label>Grupo Sanguíneo</label>
+                    <select name="grupo_sangre">
+                        <option value="No especificado">No especificado</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                    </select>
+                </div>
+
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label>Alergias</label>
+                    <textarea name="alergias" rows="2" placeholder="Ej: Penicilina, polen..."></textarea>
+                </div>
+
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label>Enfermedades Crónicas</label>
+                    <textarea name="enfermedades_cronicas" rows="2" placeholder="Ej: Diabetes..."></textarea>
+                </div>
+
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label>Medicamentos Permanentes</label>
+                    <textarea name="medicamentos" rows="2" placeholder="Ej: Metformina..."></textarea>
+                </div>
+
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label>Discapacidad / Movilidad Reducida</label>
+                    <input type="text" name="discapacidad" placeholder="Ej: Ninguna">
+                </div>
+
+                <h3 class="section-title">4. Dirección Particular</h3>
+
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label>Calle y Número</label>
+                    <input type="text" name="calle_numero" placeholder="Ej: Av. Principal 123" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Comuna</label>
+                    <input type="text" name="comuna" placeholder="Ej: Valparaíso" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Región</label>
+                    <input type="text" name="region" placeholder="Ej: Quinta Región" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Código Postal</label>
+                    <input type="text" name="codigo_postal" placeholder="Ej: 2340000">
+                </div>
+
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label>Detalles adicionales</label>
+                    <input type="text" name="detalles" placeholder="Ej: Depto 502, reja blanca...">
+                </div>
+
+                <button type="submit" class="btn-submit">Guardar Ficha Completa del Docente</button>
+            </div>
+        </form>
+        
+        <a href="{{ url_for('admin_bp.admin_panel') }}" class="btn-back">← Volver al Panel de Administración</a>
+    </div>
+
+</body>
+</html>
