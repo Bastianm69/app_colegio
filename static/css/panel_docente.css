@@ -1,0 +1,101 @@
+/* Importamos una fuente moderna y limpia */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #f3f4f6; /* Un gris muy suave y moderno */
+    color: #1f2937; 
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    color: #111827;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.card { 
+    background: #ffffff; 
+    width: 100%;
+    max-width: 800px; /* Para que no se estire por toda la pantalla */
+    padding: 30px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+    margin-bottom: 20px;
+}
+
+.card h2 {
+    margin-top: 0;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Estilo para el mensaje de "Aún no tienes cursos" */
+.mensaje-vacio {
+    color: #6b7280;
+    font-size: 1.1rem;
+    text-align: center;
+    padding: 30px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 2px dashed #d1d5db;
+}
+
+.curso-box { 
+    border: 1px solid #e5e7eb; 
+    padding: 20px; 
+    margin-top: 15px; 
+    border-radius: 8px; 
+    transition: box-shadow 0.2s;
+}
+
+.curso-box:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.curso-box h3 {
+    margin-top: 0;
+    color: #1f2937;
+}
+
+.btn-asistencia { 
+    background: #2563eb; /* Azul corporativo */
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 18px; 
+    border-radius: 6px; 
+    display: inline-block; 
+    margin-top: 10px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.btn-asistencia:hover {
+    background: #1d4ed8; 
+}
+
+.btn-logout {
+    position: absolute; /* Lo ancla a la pantalla */
+    top: 20px;         /* Separación desde arriba */
+    right: 20px;       /* Separación desde la derecha */
+    
+    background-color: #ef4444; /* Fondo rojo sólido */
+    color: white;              /* Letras blancas */
+    text-decoration: none;     /* Quita la línea de abajo */
+    font-weight: 600;
+    padding: 10px 20px;        /* Espacio interno para darle forma de botón */
+    border-radius: 6px;        /* Bordes redondeados */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra suave */
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-logout:hover {
+    background-color: #dc2626; /* Rojo más oscuro al pasar el mouse */
+    transform: translateY(-2px); /* Efecto de que el botón se levanta un poquito */
+}

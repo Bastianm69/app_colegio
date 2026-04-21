@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Asistencia - {{ curso }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tomar_asistencia.css') }}">
+</head>
+<body>
+    <a href="{{ url_for('docente_bp.panel_docente') }}">← Volver al panel</a>
+    
+    <h2>📋 Asistencia: {{ curso }}</h2>
+    <p>Fecha de hoy: {{ fecha }}</p>
+
+    <form method="POST">
+        <table>
+            <tr>
+                <th>N°</th>
+                <th>RUT</th>
+                <th>Alumno</th>
+                <th>Presente</th>
+                <th>Ausente</th>
+                <th>Atraso</th>
+                <th>Justificado</th>
+            </tr>
+            {% for alumno in alumnos %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ alumno[1] }}</td>
+                <td style="text-align: left;">{{ alumno[3] }} {{ alumno[4] }}, {{ alumno[2] }}</td>
+                
+                <td><input type="radio" name="estado_{{ alumno[0] }}" value="PRESENTE" checked></td>
+                <td><input type="radio" name="estado_{{ alumno[0] }}" value="AUSENTE"></td>
+                <td><input type="radio" name="estado_{{ alumno[0] }}" value="ATRASO"></td>
+                <td><input type="radio" name="estado_{{ alumno[0] }}" value="JUSTIFICADO"></td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <button type="submit" class="btn-guardar">Guardar Asistencia del Día</button>
+    </form>
+</body>
+</html>

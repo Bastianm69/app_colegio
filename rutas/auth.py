@@ -6,7 +6,6 @@ from mailer import enviar_correo_autorizacion
 # 1. Creamos el Blueprint para la Autenticación
 auth_bp = Blueprint('auth_bp', __name__)
 
-# 2. Ruta principal redirige al login
 @auth_bp.route('/')
 def index():
     return redirect(url_for('auth_bp.login'))
@@ -17,7 +16,18 @@ def login():
     if request.method == 'POST':
         usuario_f = request.form.get('usuario')
         password_f = request.form.get('password')
-        ip_cliente = request.remote_addr
+        
+        # --- LÓGICA DE IP REAL ---
+        # 1. Intentamos obtener la IP de la cabecera 'X-Forwarded-For'. 
+        #    Los servidores en internet (como Render o Cloudflare) guardan la IP real del usuario ahí.
+        # 2. Si esa cabecera no existe (como cuando pruebas en tu PC), usamos 'request.remote_addr'.
+        ip_cliente = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+        # 3. A veces 'X-Forwarded-For' devuelve una lista de IPs separadas por comas.
+        #    La IP real del profesor siempre es la primera de esa lista.
+        if ip_cliente and ',' in ip_cliente:
+            ip_cliente = ip_cliente.split(',')[0].strip()
+        # -------------------------
 
         conn = obtener_conexion()
         if conn:
@@ -35,7 +45,7 @@ def login():
                 if user_found:
                     id_usuario, nombre_u, rol, email_docente = user_found
                     
-                    # Registro de intento exitoso
+                    # Registro de intento exitoso con la IP real capturada arriba
                     cur.execute("CALL sp_registrar_intento_login(%s, %s, %s, %s)", 
                                 (usuario_f, id_usuario, ip_cliente, True))
                     conn.commit()
@@ -52,7 +62,7 @@ def login():
                         else:
                             error = "Error al enviar el correo de seguridad."
                 else:
-                    # Registro de intento fallido
+                    # Registro de intento fallido con la IP real
                     cur.execute("CALL sp_registrar_intento_login(%s, %s, %s, %s)", 
                                 (usuario_f, None, ip_cliente, False))
                     conn.commit()
@@ -80,17 +90,15 @@ def verificar():
         
         conn = obtener_conexion()
         if verificar_token_db(user_id, codigo_web, conn):
-            # Acceso Concedido
             session['user_id'] = user_id
             session['rol'] = rol
             session.pop('pre_login_id')
             session.pop('pre_login_rol')
             
-            # Redirección según el rol
             if rol == 'ADMIN':
                 return redirect(url_for('admin_bp.admin_panel'))
             else:
-                return redirect(url_for('docente_bp.panel_docente')) # Lo crearemos después
+                return redirect(url_for('docente_bp.panel_docente'))
         else:
             error = "Código incorrecto o expirado."
 

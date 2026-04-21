@@ -33,7 +33,7 @@ def nuevo_docente():
             try:
                 cur = conn.cursor()
                 
-                # LA GRAN CONSULTA: 3 inserciones automáticas + unión final
+                # LA GRAN CONSULTA: 3 inserciones + unión final + RETORNO de ID
                 query = """
                     WITH ins_usuario AS (
                         INSERT INTO usuarios (nombre_usuario, password_hash, email, id_rol, activo)
@@ -55,7 +55,8 @@ def nuevo_docente():
                     SELECT 
                         u.id_usuario, m.id_dato_medico, d.id_direccion, 
                         %s, %s, %s, %s, %s, %s
-                    FROM ins_usuario u, ins_medico m, ins_direccion d;
+                    FROM ins_usuario u, ins_medico m, ins_direccion d
+                    RETURNING id_docente;  -- Pedimos a PostgreSQL el ID del docente creado
                 """
                 
                 cur.execute(query, (
@@ -66,7 +67,7 @@ def nuevo_docente():
                     f.get('grupo_sangre'), f.get('alergias'), f.get('enfermedades_cronicas'), 
                     f.get('medicamentos'), f.get('discapacidad'),
                     
-                    # Datos para ins_direccion (según tu captura de pantalla)
+                    # Datos para ins_direccion
                     f.get('calle_numero'), f.get('comuna'), f.get('region'), 
                     f.get('codigo_postal'), f.get('detalles'),
                     
@@ -75,8 +76,29 @@ def nuevo_docente():
                     f.get('apellido_materno'), f.get('especialidad_nivel'), f.get('fono')
                 ))
                 
+                # -------------------------------------------------------------
+                # NUEVO: REGISTRO DE AUDITORÍA (LOG)
+                # -------------------------------------------------------------
+                # 1. Capturamos el ID del docente que acabamos de crear
+                id_nuevo_docente = cur.fetchone()[0]
+                
+                # 2. Identificamos al Administrador que está conectado
+                id_admin_actual = session['user_id'] 
+                
+                # 3. Redactamos la evidencia
+                detalles_log = f"Se registró al docente {f.get('nombres')} {f.get('apellido_paterno')} (RUT: {f.get('rut')})"
+                
+                # 4. Guardamos en la cámara de seguridad
+                query_log = """
+                    INSERT INTO logs_actividad (id_usuario, accion, tabla_afectada, registro_id, detalles)
+                    VALUES (%s, 'CREAR', 'docentes', %s, %s)
+                """
+                cur.execute(query_log, (id_admin_actual, id_nuevo_docente, detalles_log))
+                # -------------------------------------------------------------
+                
+                # Confirmamos que TODO se guarde
                 conn.commit()
-                mensaje = "¡Docente registrado con éxito (Cuenta, Salud y Dirección creadas)!"
+                mensaje = "¡Docente registrado con éxito (Historial de actividad guardado)!"
                 color = "green"
             
             except Exception as e:
@@ -93,5 +115,5 @@ def nuevo_docente():
                 cur.close()
                 conn.close()
 
-    # El render_template está fuera del IF POST para manejar el método GET (ver el formulario)
+    # El render_template está fuera del IF POST para manejar el método GET
     return render_template('nuevo_docente.html', msg=mensaje, color=color)

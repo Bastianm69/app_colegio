@@ -4,7 +4,7 @@ from mailer import mail
 # 1. Importamos nuestros Blueprints
 from rutas.auth import auth_bp
 from rutas.admin import admin_bp
-# from rutas.docente import docente_bp  <-- Lo descomentaremos cuando crees este archivo
+from rutas.docente import docente_bp # <-- ¡AQUÍ! Quitamos el '#'
 
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_para_sesiones_super_segura'
@@ -21,7 +21,7 @@ mail.init_app(app)
 # 3. Registramos las Rutas (Pegamos las piezas del rompecabezas)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
-# app.register_blueprint(docente_bp)
+app.register_blueprint(docente_bp)   # <-- ¡AQUÍ! Quitamos el '#'
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

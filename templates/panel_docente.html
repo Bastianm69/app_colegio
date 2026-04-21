@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Docente</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_docente.css') }}">
+</head>
+
+<body>
+    <a href="{{ url_for('auth_bp.login') }}" class="btn-logout">Cerrar Sesión</a>
+    <h1>Bienvenido, Profesor(a) {{ nombre }}</h1>
+    
+    <div class="card">
+        <h2>📚 Mis Clases y Asignaturas</h2>
+        
+        {% if clases %}
+            {% for clase in clases %}
+            <div class="curso-box">
+                <h3>{{ clase[1] }} ({{ clase[2] }}) - {{ clase[3] }}</h3>
+                <a href="{{ url_for('docente_bp.tomar_asistencia', id_curso=clase[0]) }}" class="btn-asistencia">📝 Pasar Asistencia</a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>Aún no tienes cursos o asignaturas asignadas para este año.</p>
+        {% endif %}
+    </div>
+
+    
+</body>
+</html>
