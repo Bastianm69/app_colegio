@@ -19,14 +19,31 @@ def nuevo_docente():
 
     mensaje = None
     color = "red"
+    
+    # ---------------------------------------------------------
+    # Creamos un diccionario vacío al inicio. 
+    # Si la petición es GET (solo entrar a la página), este diccionario 
+    # se enviará vacío y el formulario aparecerá en blanco.
+    # ---------------------------------------------------------
+    datos = {}
 
     if request.method == 'POST':
-        # Recogemos todos los datos del formulario
+        # request.form trae todo lo que el usuario escribió.
         f = request.form 
+        
+        # ---------------------------------------------------------
+        # IMPORTANTE: Convertimos request.form en un diccionario normal dict().
+        # Hacemos esto porque request.form es de solo lectura (no se puede modificar).
+        # Al convertirlo en un dict(), podemos borrarle campos específicos si hay errores.
+        # ---------------------------------------------------------
+        datos = dict(f) 
         
         # Validamos el RUT antes de tocar la base de datos
         if not validar_rut(f.get('rut')):
-            return render_template('nuevo_docente.html', msg="Error: El RUT ingresado es inválido.", color="red")
+            # Si el RUT es inválido matemáticamente, lo borramos del diccionario
+            datos['rut'] = '' 
+            # Devolvemos la página: el mensaje saldrá rojo y la casilla del RUT estará vacía
+            return render_template('nuevo_docente.html', msg="Error: El RUT ingresado es inválido.", color="red", datos=datos)
 
         conn = obtener_conexion()
         if conn:
@@ -76,44 +93,62 @@ def nuevo_docente():
                     f.get('apellido_materno'), f.get('especialidad_nivel'), f.get('fono')
                 ))
                 
-                # -------------------------------------------------------------
-                # NUEVO: REGISTRO DE AUDITORÍA (LOG)
-                # -------------------------------------------------------------
-                # 1. Capturamos el ID del docente que acabamos de crear
+                # REGISTRO DE AUDITORÍA (LOG)
                 id_nuevo_docente = cur.fetchone()[0]
-                
-                # 2. Identificamos al Administrador que está conectado
                 id_admin_actual = session['user_id'] 
-                
-                # 3. Redactamos la evidencia
                 detalles_log = f"Se registró al docente {f.get('nombres')} {f.get('apellido_paterno')} (RUT: {f.get('rut')})"
                 
-                # 4. Guardamos en la cámara de seguridad
                 query_log = """
                     INSERT INTO logs_actividad (id_usuario, accion, tabla_afectada, registro_id, detalles)
                     VALUES (%s, 'CREAR', 'docentes', %s, %s)
                 """
                 cur.execute(query_log, (id_admin_actual, id_nuevo_docente, detalles_log))
-                # -------------------------------------------------------------
                 
                 # Confirmamos que TODO se guarde
                 conn.commit()
                 mensaje = "¡Docente registrado con éxito (Historial de actividad guardado)!"
                 color = "green"
+                
+                # ---------------------------------------------------------
+                # Si llegamos aquí, la base de datos guardó todo perfecto.
+                # Vaciamos el diccionario 'datos' para que el formulario 
+                # quede limpio y listo para registrar al siguiente docente.
+                # ---------------------------------------------------------
+                datos = {}
             
             except Exception as e:
+                # Si algo falla (ej: RUT duplicado), deshacemos los cambios
                 conn.rollback()
-                # Personalización de errores comunes
+                
                 error_msg = str(e)
+                
+                # ---------------------------------------------------------
+                # MANEJO DE ERRORES INTELIGENTE:
+                # Revisamos qué parte de la base de datos se quejó y borramos 
+                # SOLO esa casilla en el diccionario 'datos'.
+                # ---------------------------------------------------------
+                
                 if "docentes_rut_key" in error_msg:
-                    mensaje = "Error: El RUT ya existe en el sistema."
+                    mensaje = "Error: Este RUT ya pertenece a otro profesor en el sistema."
+                    datos['rut'] = '' # Vaciamos solo el RUT
+                    
                 elif "usuarios_nombre_usuario_key" in error_msg:
-                    mensaje = "Error: El nombre de usuario ya está ocupado."
+                    mensaje = "Error: El nombre de usuario ya está ocupado. Intenta con otro."
+                    datos['nombre_usuario'] = '' # Vaciamos solo el Usuario
+                    
+                elif "usuarios_email_key" in error_msg:
+                    mensaje = "Error: Este correo electrónico ya está registrado."
+                    datos['email'] = '' # Vaciamos solo el Correo
+                    
                 else:
                     mensaje = f"Error en el registro: {e}"
             finally:
                 cur.close()
                 conn.close()
 
-    # El render_template está fuera del IF POST para manejar el método GET
-    return render_template('nuevo_docente.html', msg=mensaje, color=color)
+    # ---------------------------------------------------------
+    # Al final, le mandamos el diccionario 'datos' a tu archivo HTML.
+    # - Si hubo éxito, 'datos' irá vacío (formulario limpio).
+    # - Si hubo error, 'datos' irá con casi todo, menos el campo que falló.
+    # ---------------------------------------------------------
+    return render_template('nuevo_docente.html', msg=mensaje, color=color, datos=datos)
