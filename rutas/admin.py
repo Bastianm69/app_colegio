@@ -11,6 +11,24 @@ def admin_panel():
         return redirect(url_for('auth_bp.login'))
     return render_template('panel_admin.html')
 
+    mi_id = session['user_id']
+    nombre_admin = "Administrador"
+
+    conn = obtener_conexion()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT nombre_usuario FROM usuarios WHERE id_usuario = %s", (mi_id,))
+            resultado = cur.fetchone()
+            if resultado:
+                nombre_admin = resultado[0]
+        except Exception as e:
+            print(f"Error al obtener nombre de admin: {e}")
+        finally:
+            cur.close()
+            conn.close()
+    return render_template('panel_admin.html', nombre=nombre_admin)
+
 @admin_bp.route('/nuevo-docente', methods=['GET', 'POST'])
 def nuevo_docente():
     # Seguridad: Verificar sesión de administrador
