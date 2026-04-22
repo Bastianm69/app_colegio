@@ -18,21 +18,17 @@ def login():
         password_f = request.form.get('password')
         
         # --- LÓGICA DE IP REAL ---
-        # 1. Intentamos obtener la IP de la cabecera 'X-Forwarded-For'. 
-        #    Los servidores en internet (como Render o Cloudflare) guardan la IP real del usuario ahí.
-        # 2. Si esa cabecera no existe (como cuando pruebas en tu PC), usamos 'request.remote_addr'.
         ip_cliente = request.headers.get('X-Forwarded-For', request.remote_addr)
-
-        # 3. A veces 'X-Forwarded-For' devuelve una lista de IPs separadas por comas.
-        #    La IP real del profesor siempre es la primera de esa lista.
         if ip_cliente and ',' in ip_cliente:
             ip_cliente = ip_cliente.split(',')[0].strip()
-        # -------------------------
 
         conn = obtener_conexion()
         if conn:
             try:
                 cur = conn.cursor()
+                
+                # VOLVEMOS A TU LÓGICA ORIGINAL:
+                # Comparamos nombre y contraseña directamente como texto plano
                 cur.execute("""
                     SELECT u.id_usuario, u.nombre_usuario, r.nombre_rol, u.email 
                     FROM usuarios u
@@ -45,7 +41,12 @@ def login():
                 if user_found:
                     id_usuario, nombre_u, rol, email_docente = user_found
                     
-                    # Registro de intento exitoso con la IP real capturada arriba
+                    # --- ÉXITO: GUARDAMOS LOS DATOS TEMPORALES ---
+                    session['pre_login_id'] = id_usuario
+                    session['pre_login_rol'] = rol
+                    session['pre_login_nombre'] = nombre_u # <-- ESTO GUARDA TU NOMBRE
+                    
+                    # Registro de intento exitoso
                     cur.execute("CALL sp_registrar_intento_login(%s, %s, %s, %s)", 
                                 (usuario_f, id_usuario, ip_cliente, True))
                     conn.commit()
@@ -53,16 +54,13 @@ def login():
                     if not email_docente:
                         error = "Tu cuenta no tiene un correo registrado."
                     else:
-                        session['pre_login_id'] = id_usuario
-                        session['pre_login_rol'] = rol
-                        
                         token = crear_token_db(id_usuario, conn)
                         if token and enviar_correo_autorizacion(email_docente, token):
                             return redirect(url_for('auth_bp.verificar')) 
                         else:
                             error = "Error al enviar el correo de seguridad."
                 else:
-                    # Registro de intento fallido con la IP real
+                    # Registro de intento fallido
                     cur.execute("CALL sp_registrar_intento_login(%s, %s, %s, %s)", 
                                 (usuario_f, None, ip_cliente, False))
                     conn.commit()
@@ -90,10 +88,15 @@ def verificar():
         
         conn = obtener_conexion()
         if verificar_token_db(user_id, codigo_web, conn):
+            # PASAMOS LOS DATOS A LA SESIÓN DEFINITIVA
             session['user_id'] = user_id
             session['rol'] = rol
-            session.pop('pre_login_id')
-            session.pop('pre_login_rol')
+            
+            # PASAMOS EL NOMBRE DE USUARIO PARA EL PANEL LATERAL
+            session['nombre_usuario'] = session.pop('pre_login_nombre', 'Administrador')
+            
+            session.pop('pre_login_id', None)
+            session.pop('pre_login_rol', None)
             
             if rol == 'ADMIN':
                 return redirect(url_for('admin_bp.admin_panel'))

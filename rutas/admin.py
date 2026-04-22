@@ -5,30 +5,23 @@ from validaciones import validar_rut
 # 1. Definición del Blueprint
 admin_bp = Blueprint('admin_bp', __name__)
 
+# ==============================================================================
+# PANEL PRINCIPAL DEL ADMINISTRADOR
+# ==============================================================================
 @admin_bp.route('/admin')
 def admin_panel():
+    # Seguridad: Verificar que sea un administrador
     if 'user_id' not in session or session.get('rol') != 'ADMIN':
         return redirect(url_for('auth_bp.login'))
-    return render_template('panel_admin.html')
+    
+    nombre_admin = session.get('nombre_usuario', 'nombre_admin')
+    
+    # ¡Súper limpio! El HTML ya lee el nombre directamente de la memoria de Flask
+    return render_template('panel_admin.html', nombre_admin=nombre_admin) # type: ignore
 
-    mi_id = session['user_id']
-    nombre_admin = "Administrador"
-
-    conn = obtener_conexion()
-    if conn:
-        try:
-            cur = conn.cursor()
-            cur.execute("SELECT nombre_usuario FROM usuarios WHERE id_usuario = %s", (mi_id,))
-            resultado = cur.fetchone()
-            if resultado:
-                nombre_admin = resultado[0]
-        except Exception as e:
-            print(f"Error al obtener nombre de admin: {e}")
-        finally:
-            cur.close()
-            conn.close()
-    return render_template('panel_admin.html', nombre=nombre_admin)
-
+# ==============================================================================
+# MÓDULO: REGISTRAR NUEVO DOCENTE
+# ==============================================================================
 @admin_bp.route('/nuevo-docente', methods=['GET', 'POST'])
 def nuevo_docente():
     # Seguridad: Verificar sesión de administrador
@@ -38,29 +31,17 @@ def nuevo_docente():
     mensaje = None
     color = "red"
     
-    # ---------------------------------------------------------
-    # Creamos un diccionario vacío al inicio. 
-    # Si la petición es GET (solo entrar a la página), este diccionario 
-    # se enviará vacío y el formulario aparecerá en blanco.
-    # ---------------------------------------------------------
+    # Creamos un diccionario vacío al inicio por si solo entran a ver la página
     datos = {}
 
     if request.method == 'POST':
-        # request.form trae todo lo que el usuario escribió.
+        # Convertimos los datos del formulario en un diccionario modificable
         f = request.form 
-        
-        # ---------------------------------------------------------
-        # IMPORTANTE: Convertimos request.form en un diccionario normal dict().
-        # Hacemos esto porque request.form es de solo lectura (no se puede modificar).
-        # Al convertirlo en un dict(), podemos borrarle campos específicos si hay errores.
-        # ---------------------------------------------------------
         datos = dict(f) 
         
         # Validamos el RUT antes de tocar la base de datos
         if not validar_rut(f.get('rut')):
-            # Si el RUT es inválido matemáticamente, lo borramos del diccionario
             datos['rut'] = '' 
-            # Devolvemos la página: el mensaje saldrá rojo y la casilla del RUT estará vacía
             return render_template('nuevo_docente.html', msg="Error: El RUT ingresado es inválido.", color="red", datos=datos)
 
         conn = obtener_conexion()
@@ -91,7 +72,7 @@ def nuevo_docente():
                         u.id_usuario, m.id_dato_medico, d.id_direccion, 
                         %s, %s, %s, %s, %s, %s
                     FROM ins_usuario u, ins_medico m, ins_direccion d
-                    RETURNING id_docente;  -- Pedimos a PostgreSQL el ID del docente creado
+                    RETURNING id_docente;  
                 """
                 
                 cur.execute(query, (
@@ -127,36 +108,25 @@ def nuevo_docente():
                 mensaje = "¡Docente registrado con éxito (Historial de actividad guardado)!"
                 color = "green"
                 
-                # ---------------------------------------------------------
-                # Si llegamos aquí, la base de datos guardó todo perfecto.
-                # Vaciamos el diccionario 'datos' para que el formulario 
-                # quede limpio y listo para registrar al siguiente docente.
-                # ---------------------------------------------------------
+                # Vaciamos los datos tras el éxito para limpiar el formulario
                 datos = {}
             
             except Exception as e:
-                # Si algo falla (ej: RUT duplicado), deshacemos los cambios
                 conn.rollback()
-                
                 error_msg = str(e)
                 
-                # ---------------------------------------------------------
-                # MANEJO DE ERRORES INTELIGENTE:
-                # Revisamos qué parte de la base de datos se quejó y borramos 
-                # SOLO esa casilla en el diccionario 'datos'.
-                # ---------------------------------------------------------
-                
+                # Manejo de errores para vaciar solo el campo incorrecto
                 if "docentes_rut_key" in error_msg:
                     mensaje = "Error: Este RUT ya pertenece a otro profesor en el sistema."
-                    datos['rut'] = '' # Vaciamos solo el RUT
+                    datos['rut'] = '' 
                     
                 elif "usuarios_nombre_usuario_key" in error_msg:
                     mensaje = "Error: El nombre de usuario ya está ocupado. Intenta con otro."
-                    datos['nombre_usuario'] = '' # Vaciamos solo el Usuario
+                    datos['nombre_usuario'] = '' 
                     
                 elif "usuarios_email_key" in error_msg:
                     mensaje = "Error: Este correo electrónico ya está registrado."
-                    datos['email'] = '' # Vaciamos solo el Correo
+                    datos['email'] = '' 
                     
                 else:
                     mensaje = f"Error en el registro: {e}"
@@ -164,9 +134,51 @@ def nuevo_docente():
                 cur.close()
                 conn.close()
 
-    # ---------------------------------------------------------
-    # Al final, le mandamos el diccionario 'datos' a tu archivo HTML.
-    # - Si hubo éxito, 'datos' irá vacío (formulario limpio).
-    # - Si hubo error, 'datos' irá con casi todo, menos el campo que falló.
-    # ---------------------------------------------------------
     return render_template('nuevo_docente.html', msg=mensaje, color=color, datos=datos)
+
+@admin_bp.route('/asignar-curso', methods=['GET', 'POST'])
+def asignar_curso():
+    if 'user_id' not in session or session.get('rol') != 'ADMIN':
+        return redirect(url_for('auth_bp.login'))
+
+    mensaje = None
+    color = "red"
+    docentes = []
+    cursos = []
+
+    conn = obtener_conexion()
+    if conn:
+        try:
+            cur = conn.cursor()
+            
+            # Traemos la lista de profes para el <select>
+            cur.execute("SELECT id_docente, nombres, apellido_paterno FROM docentes ORDER BY nombres ASC")
+            docentes = cur.fetchall()
+
+            # Traemos la lista de cursos para el <select>
+            cur.execute("SELECT id_curso, nombre_curso FROM cursos ORDER BY nombre_curso ASC")
+            cursos = cur.fetchall()
+
+            if request.method == 'POST':
+                id_docente = request.form.get('id_docente')
+                id_curso = request.form.get('id_curso')
+                
+                # Guardamos la relación en la tabla puente
+                cur.execute("""
+                    INSERT INTO curso_docente (id_docente, id_curso, periodo)
+                    VALUES (%s, %s, '2024')
+                """, (id_docente, id_curso))
+                
+                conn.commit()
+                mensaje = "✅ El docente fue asignado al curso correctamente."
+                color = "green"
+
+        except Exception as e:
+            if conn: conn.rollback()
+            mensaje = f"Error: {e}"
+        finally:
+            cur.close()
+            conn.close()
+
+    return render_template('asignar_curso.html', docentes=docentes, cursos=cursos, msg=mensaje, color=color)
+

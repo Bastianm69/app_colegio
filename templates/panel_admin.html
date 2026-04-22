@@ -3,41 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administrador - Sistema Escolar</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_admin.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <title>Panel de Administración</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_layout.css') }}">
 </head>
-<body class="admin-body">
+<body>
 
-    <nav class="admin-navbar">
-        <div class="logo">
-            <h2>Sistema Escolar - Admin</h2>
-        </div>
-        <div>
-            <a href="{{ url_for('auth_bp.logout') }}" class="btn-logout">Cerrar Sesión</a>
-        </div>
-    </nav>
-
-    <main class="admin-main-content">
-        <div class="admin-header">
-            <h3>Bienvenido, Administrador</h3>
-            <p>¿Qué deseas hacer hoy?</p>
-        </div>
-
-        <div class="admin-actions">
+    <div class="dashboard-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>AdminEscolar</h2>
+                <p>Bienvenido, <strong>{{ session.get('nombre_usuario', 'Administrador') }}</strong></p>
+            </div>
             
-            <a href="{{ url_for('admin_bp.nuevo_docente') }}" class="btn-action">
-                <span class="icon">👨‍🏫</span>
-                <strong>Añadir Docente</strong>
-            </a>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="{{ url_for('admin_bp.admin_panel') }}" class="active">Inicio</a></li>
+                    
+                    <li class="nav-title">GESTIÓN</li>
+                    <li><a href="{{ url_for('admin_bp.nuevo_docente') }}">Añadir Docente</a></li>
+                    <li><a href="#">Ver Docentes</a></li>
+                    <li><a href="#">Alumnos</a></li>
+                    <li><a href="{{ url_for('admin_bp.asignar_curso') }}">Cursos y Asignaturas</a></li>
+                    
+                    <li class="nav-title">SISTEMA</li>
+                    <li><a href="#">Configuración</a></li>
+                    <li><a href="{{ url_for('auth_bp.logout') }}" class="logout-btn">Cerrar Sesión</a></li>
+                </ul>
+            </nav>
+        </aside>
 
-            <a href="#" class="btn-action">
-                <span class="icon">🎓</span>
-                <strong>Añadir Alumno</strong>
-            </a>
+        <main class="main-content">
+            <header class="top-header">
+                <h1>Dashboard Principal</h1>
+                <div class="user-info">
+                    <span>Panel de Control - Modo Administrador</span>
+                </div>
+            </header>
 
-        </div>
-    </main>
+            <section class="content-area">
+                <div class="welcome-card">
+                    <h3>¡Hola de nuevo!</h3>
+                    <p>Selecciona una opción del menú lateral para comenzar a administrar el sistema.</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Docentes</h4>
+                        <p class="stat-number">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Total Alumnos</h4>
+                        <p class="stat-number">--</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+    </div>
 
 </body>
 </html>
