@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from db_connection import obtener_conexion
 from db_tokens import crear_token_db, verificar_token_db
+import db_tokens
 from mailer import enviar_correo_autorizacion
 
 # 1. Creamos el Blueprint para la Autenticación
