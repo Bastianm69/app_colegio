@@ -1,3 +1,5 @@
+#son las rutas relacionadas con la autenticación (login, logout, verificación de código 2FA)
+
 from flask import Blueprint, render_template, request, redirect, url_for, session
 
 # Importamos nuestras propias funciones desde otros archivos del proyecto
