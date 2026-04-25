@@ -1,3 +1,5 @@
+# Esto es para llamara 2 sp que estan en la base de datos, el de crear_token_db y verificar_token_db #
+
 def crear_token_db(id_usuario, conn):
     """
     Llama al procedimiento almacenado 'fn_generar_token_seguridad' en la base de datos.
@@ -7,10 +9,10 @@ def crear_token_db(id_usuario, conn):
     try:
         cur = conn.cursor()
         
-        # Invocamos la función de la base de datos (Stored Procedure)
+        # Invocamos la función de la base de datos sp
         cur.execute("SELECT fn_generar_token_seguridad(%s)", (id_usuario,))
-        
         resultado = cur.fetchone()
+        
         # Capturamos el token generado por el SP
         token_generado = resultado[0] if resultado else None
         
@@ -19,7 +21,7 @@ def crear_token_db(id_usuario, conn):
         
         return token_generado
     except Exception as e:
-        # Registro de error en consola para depuración
+        # muestra si hay error en la generación del token
         print(f"Error al invocar SP fn_generar_token_seguridad: {e}")
         return None
 
@@ -36,12 +38,12 @@ def verificar_token_db(id_usuario, token_ingresado, conn):
         cur.execute("SELECT fn_verificar_token_seguridad(%s, %s)", (id_usuario, token_ingresado))
         
         resultado = cur.fetchone()
-        # El SP de PostgreSQL devuelve un booleano (True/False) directamente
+        # El SP de devuelve un booleano (True/False) directamente
         es_valido = resultado[0] if resultado else False
         
         conn.commit()
         cur.close()
-        
+        # muestra si hay error en la verificación del token
         return es_valido
     except Exception as e:
         # Registro de error en consola para depuración

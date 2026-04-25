@@ -1,3 +1,5 @@
+# esta es la conexion a la base de datos en Neon #
+
 import psycopg2
 
 def obtener_conexion():
