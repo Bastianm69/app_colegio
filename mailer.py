@@ -6,12 +6,12 @@ mail = Mail()
 
 def enviar_correo_autorizacion(email_destino, token):
     msg = Message("Código de Acceso Sistema Escolar",
-                  sender="bastianmatta12@gmail.com", # Este es el correo que enviará el mensaje
+                  sender="bastianmatta12@gmail.com", 
                   recipients=[email_destino])
     
     msg.body = f"Tu código de acceso es: {token}. Expira en 15 minutos."
     
-    # Dejamos un solo bloque try/except para que Python no esconda el error
+    # esto es para mostrar error en consola si el correo no se envía por alguna razón (credenciales mal, servicio caído, etc)
     try:
         mail.send(msg)
         return True

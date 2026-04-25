@@ -1,9 +1,3 @@
-# Importamos las herramientas necesarias de Flask
-# Blueprint: Sirve para separar nuestra app en módulos (como carpetas de un archivador).
-# render_template: Para mostrar los archivos HTML.
-# request: Para atrapar los datos que el usuario envía desde los formularios web.
-# redirect y url_for: Para enviar al usuario de una página a otra.
-# session: Un espacio de memoria temporal y seguro para guardar quién inició sesión.
 from flask import Blueprint, render_template, request, redirect, url_for, session
 
 # Importamos nuestras propias funciones desde otros archivos del proyecto

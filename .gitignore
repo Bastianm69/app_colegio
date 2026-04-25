@@ -1,0 +1,24 @@
+==========================================
+IGNORAR VARIABLES DE ENTORNO (Seguridad)
+==========================================
+NUNCA subir este archivo porque tiene las contraseñas reales
+.env
+==========================================
+IGNORAR ENTORNOS VIRTUALES (Peso)
+==========================================
+Son carpetas muy pesadas y cada PC debe tener la suya propia
+venv/
+env/
+ENV/
+=========================================
+IGNORAR CACHÉ DE PYTHON (Basura)
+==========================================
+Son archivos compilados que Python crea automáticamente y no sirven para el repositorio
+pycache/
+*.py[cod]
+*$py.class
+==========================================
+IGNORAR ARCHIVOS DEL EDITOR (VS Code / Mac)
+==========================================
+.vscode/
+.DS_Store

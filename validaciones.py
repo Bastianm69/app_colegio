@@ -4,7 +4,7 @@ from db_connection import obtener_conexion
 
 def validar_rut(rut):
     """
-    Valida un RUT chileno llamando a la función fn_validar_rut en PostgreSQL.
+    Valida un RUT llamando a la función fn_validar_rut
     """
     try:
         # Abrimos la conexión a la base de datos
