@@ -1,2 +1,10 @@
-16-04
-se añadio el formulario para añadir docente agrege direccion me falto probar que todo valla a la base de datos y que guarde, tmbien borrar al docente que gaurde ya que lo guarde sin direccion 
+# 🏫 Sistema de Gestión Docente - App Colegio
+
+Este proyecto permite la administración de docentes y cursos utilizando **Flask** y **PostgreSQL**.
+
+## 🚀 Instalación Rápida
+
+1. **Clonar el repositorio:**
+   ```bash
+   git clone [https://github.com/Bastianm69/app_colegio.git](https://github.com/Bastianm69/app_colegio.git)
+   cd app_colegio
