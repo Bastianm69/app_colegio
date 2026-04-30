@@ -24,7 +24,6 @@ def admin_panel():
 # ==============================================================================
 @admin_bp.route('/nuevo-docente', methods=['GET', 'POST'])
 def nuevo_docente():
-    # Seguridad: Verificar sesión de administrador
     if 'user_id' not in session or session.get('rol') != 'ADMIN':
         return redirect(url_for('auth_bp.login'))
 
