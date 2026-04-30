@@ -5,7 +5,7 @@ from mailer import mail
 
 # Cargamos las variables en env.
 load_dotenv()
-
+#hola
 # 1. Importamos nuestros Blueprints
 from rutas.auth import auth_bp
 from rutas.admin import admin_bp
