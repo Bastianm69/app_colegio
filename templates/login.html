@@ -4,132 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sistema Escolar</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
-
-    <style>
-        /* Estilos base para centrar el login en la pantalla */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5; /* Color de fondo suave */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh; /* Ocupa todo el alto de la ventana */
-        }
-
-        /* Contenedor principal (La "tarjeta" blanca) */
-        .login-container {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px; /* En PC no pasará de 400px */
-            box-sizing: border-box; /* Asegura que el padding no rompa el ancho */
-        }
-
-        /* Encabezado del Login */
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .login-header h2 {
-            margin: 0;
-            color: #2c3e50;
-            font-size: 24px;
-        }
-
-        .login-header p {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        /* Grupos de entrada (Label + Input) */
-        .input-group {
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column; /* Label arriba, Input abajo */
-        }
-
-        .input-group label {
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #34495e;
-            font-size: 14px;
-        }
-
-        .input-group input {
-            padding: 12px;
-            border: 1px solid #dcdde1;
-            border-radius: 6px;
-            font-size: 16px; /* Tamaño ideal para que el teclado de iPhone no haga zoom */
-            transition: border-color 0.3s;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #3498db; /* Cambia de color al hacer clic */
-        }
-
-        /* Botón de Iniciar Sesión */
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn-login:hover {
-            background-color: #2980b9;
-        }
-
-        /* Estilo para los mensajes de error */
-        .error-message {
-            color: #e74c3c;
-            text-align: center;
-            margin-bottom: 15px;
-            font-weight: bold;
-            font-size: 14px;
-            background-color: #fdeaea;
-            padding: 10px;
-            border-radius: 4px;
-        }
-
-        /* --- MEDIA QUERIES PARA CELULARES --- */
-        @media (max-width: 480px) {
-            body {
-                background-color: #ffffff; /* En móviles quitamos el fondo gris para que se vea limpio */
-                align-items: flex-start; /* Alinea el login arriba en pantallas muy pequeñas */
-            }
-
-            .login-container {
-                box-shadow: none; /* Quitamos la sombra en móvil para un look más plano */
-                padding: 30px 20px;
-            }
-
-            .login-header h2 {
-                font-size: 20px;
-            }
-            
-            /* Hacemos los inputs un poco más grandes para facilitar el toque con el dedo */
-            .input-group input {
-                padding: 15px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
-<body>
+<body class="login-body">
 
 <div class="login-container">
     <div class="login-header">
@@ -156,6 +35,10 @@
         </div>
 
         <button type="submit" class="btn-login">Iniciar Sesión</button>
+        
+        <div class="forgot-password-container">
+            <a href="/recuperar_clave" class="forgot-password-link">¿Has olvidado tu contraseña?</a>
+        </div>
         
     </form>
 </div>

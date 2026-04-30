@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Contraseña - Sistema Escolar</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body class="login-body">
+
+<div class="login-container">
+    <div class="login-header">
+        <h2>Crea tu nueva contraseña</h2>
+        <p>Ingresa el código de 6 dígitos que enviamos a tu correo y tu nueva clave segura.</p>
+    </div>
+
+    <form action="/restablecer_clave" method="POST">
+        
+        {% if error %}
+            <div class="error-message">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="error-message" {% if category == 'success' %}style="background-color: #d4edda; color: #155724;"{% endif %}>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="input-group">
+            <label for="codigo">Código de Seguridad (6 dígitos)</label>
+            <input type="text" id="codigo" name="codigo" placeholder="Ej: 123456" required autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <label for="nueva_password">Nueva Contraseña</label>
+            <input type="password" id="nueva_password" name="nueva_password" placeholder="Tu nueva clave" required>
+        </div>
+
+        <button type="submit" class="btn-login">Actualizar Contraseña</button>
+        
+        <div class="forgot-password-container">
+            <a href="/login" class="forgot-password-link">← Cancelar y volver al login</a>
+        </div>
+        
+    </form>
+</div>
+
+</body>
+</html>

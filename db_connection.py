@@ -32,3 +32,25 @@ if __name__ == '__main__':
     else:
         print("❌ Falló la conexión. Revisa que el enlace sea correcto y tenga tu contraseña.")
     
+
+def registrar_auditoria_login(nombre_usuario, id_usuario, ip_direccion, exito, conn):
+    """
+    Llama al procedimiento almacenado para registrar si un intento de login 
+    fue exitoso o fallido.
+    """
+    try:
+        cur = conn.cursor()
+        
+        # Ejecutamos el SP usando CALL
+        cur.execute(
+            "CALL sp_registrar_intento_login(%s, %s, %s, %s)", 
+            (nombre_usuario, id_usuario, ip_direccion, exito)
+        )
+        
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        # Hacemos rollback por si falla, pero NO detenemos la app.
+        # El usuario debe poder entrar aunque falle el registro de auditoría.
+        conn.rollback()
+        print(f"Error crítico en auditoría de login: {e}")
