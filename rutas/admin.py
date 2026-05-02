@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from db_connection import obtener_conexion
 from validaciones import validar_rut 
+from db_registrar_docente import registrar_docente_db
+from db_registrar_docente import obtener_todos_los_docentes, dar_de_baja_docente_db
+from db_registrar_docente import obtener_docente_por_rut, actualizar_docente_db
 
-# IMPORTANTE: Asegúrate de que este archivo 'db_usuarios.py' exista 
-# con la función 'registrar_docente_db' que creamos antes.
-from db_usuarios import registrar_docente_db 
 
 # 1. Definición del Blueprint
 admin_bp = Blueprint('admin_bp', __name__)
@@ -84,19 +84,82 @@ def nuevo_docente():
     return render_template('nuevo_docente.html', datos=datos)
 
 # ==============================================================================
-# MÓDULO: ASIGNAR CURSO (Preparado para el próximo SP)
+# MÓDULO: VER DOCENTES
 # ==============================================================================
-@admin_bp.route('/asignar-curso', methods=['GET', 'POST'])
-def asignar_curso():
-    if 'user_id' not in session or session.get('rol') != 'ADMIN':
+
+@admin_bp.route('/ver-docentes')
+def lista_docentes():
+    conn = obtener_conexion()
+    docentes = obtener_todos_los_docentes(conn)
+    conn.close()
+    return render_template('ver_docentes.html', docentes=docentes)
+
+
+@admin_bp.route('/eliminar-docente/<rut>')
+def eliminar_docente(rut):
+    # Verificación básica de sesión
+    if not session.get('user_id'):
         return redirect(url_for('auth_bp.login'))
 
-    # Aquí iría la lógica para cargar docentes y cursos desde la BD para los selects
-    docentes = []
-    cursos = []
+    conn = obtener_conexion()
+    exito, mensaje = dar_de_baja_docente_db(rut, conn)
+    conn.close()
+    
+    # Después de cambiar el estado, volvemos a la lista para ver el cambio
+    return redirect(url_for('admin_bp.lista_docentes'))
 
+@admin_bp.route('/editar-docente/<rut>', methods=['GET', 'POST'])
+def editar_docente(rut):
+    conn = obtener_conexion()
+    
     if request.method == 'POST':
-        # Pendiente: Implementación con sp_asignar_docente_curso
-        flash("Funcionalidad en desarrollo: Conectando con Stored Procedure...", "info")
+        # Captura de datos desde el HTML
+        datos_form = {
+            'rut': rut,
+            'email': request.form.get('email'),
+            'nombres': request.form.get('nombres'),
+            'apellido_paterno': request.form.get('apellido_paterno'),
+            'apellido_materno': request.form.get('apellido_materno'),
+            'especialidad_nivel': request.form.get('especialidad_nivel'),
+            'fono': request.form.get('fono'),
+            'calle_numero': request.form.get('calle_numero'),
+            'comuna': request.form.get('comuna'),
+            'region': request.form.get('region'),
+            'codigo_postal': request.form.get('codigo_postal'),
+            'detalles': request.form.get('detalles'),
+            'grupo_sangre': request.form.get('grupo_sangre'),
+            'discapacidad': request.form.get('discapacidad'),
+            'alergias': request.form.get('alergias'),
+            'enfermedades_cronicas': request.form.get('enfermedades_cronicas'),
+            'medicamentos': request.form.get('medicamentos')
+        }
+        
+        exito, msj = actualizar_docente_db(datos_form, conn)
+        conn.close()
+        
+        if exito:
+            # Redirige a la tabla para ver los cambios
+            return redirect(url_for('admin_bp.lista_docentes'))
+        else:
+            return f"Error: {msj}"
 
-    return render_template('asignar_curso.html', docentes=docentes, cursos=cursos)
+    # Lógica para mostrar el formulario (GET)
+    docente = obtener_docente_por_rut(conn, rut)
+    conn.close()
+    return render_template('editar_docente.html', d=docente)
+
+# ==============================================================================
+# MÓDULO: ASIGNAR CURSO (Preparado para el próximo SP)
+# ==============================================================================
+@admin_bp.route('/asignar-curso/<rut>')
+def asignar_curso(rut):
+    # Por ahora solo retornamos un mensaje para que no de error
+    return redirect(url_for('admin_bp.asignar_curso', rut=rut))
+
+@admin_bp.route('/cursos')
+def lista_cursos():
+    return "dios escucha este programador"
+
+
+
+

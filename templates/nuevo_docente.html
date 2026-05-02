@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Añadir Docente - Admin</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/nuevo_docente.css') }}">
-    <script src="{{ url_for('static', filename='js/docentes.js') }}"></script>
 </head>
 <body>
 
@@ -13,6 +12,7 @@
         <h2>Registrar Nuevo Docente</h2>
 
         {% if msg %}
+            <!-- Este style se queda porque el color viene directamente de Flask -->
             <div class="alert" style="background-color: {{ color }};">
                 {{ msg }}
             </div>
@@ -21,95 +21,85 @@
         <form action="{{ url_for('admin_bp.nuevo_docente') }}" method="POST">
             <div class="grid-container">
                 
-                <h3 class="section-title">1. Credenciales de Acceso</h3>
+                <!-- SECCIÓN 1: TABLA USUARIOS -->
+                <h3 class="section-title">1. Credenciales de Acceso (Usuario)</h3>
                 
-                <!-- LOS INPUTS NORMALES: Usan la propiedad value="..." para recordar el texto -->
+                <div class="input-group">
+                    <label>Rol Asignado</label>
+                    <input type="text" value="DOCENTE" readonly class="input-readonly">
+                    <input type="hidden" name="rol" value="DOCENTE">
+                </div>
+
                 <div class="input-group">
                     <label>Nombre de Usuario</label>
-                    <input type="text" name="nombre_usuario" placeholder="ej: k.matta" value="{{ datos.get('nombre_usuario', '') }}" required>
+                    <input type="text" name="usuario" placeholder="ej: k.matta" value="{{ datos.get('usuario', '') }}" required>
                 </div>
                 
                 <div class="input-group">
                     <label>Contraseña</label>
-                    <!-- NOTA DE SEGURIDAD: La contraseña NUNCA se guarda en la memoria. 
-                         Si hay error, el administrador tendrá que escribirla de nuevo por protección. -->
-                    <input type="password" name="password" placeholder="********" required>
+                    <div class="password-container">
+                        <input type="password" name="password" id="inputPassword" placeholder="********" required class="password-input">
+                        
+                        <span onclick="mostrarOcultarPassword()" class="password-toggle-icon" style="color: #666; display: flex; align-items: center;">
+                        <!-- Icono Ojo Abierto - AHORA EMPIEZA OCULTO -->
+                            <svg id="icono-ojo" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        
+                            <!-- Icono Ojo Tachado - AHORA EMPIEZA VISIBLE (Porque la contra está oculta al inicio) -->
+                            <svg id="icono-ojo-cerrado" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </span>
+                    </div>
                 </div>
                 
-                <div class="input-group" style="grid-column: 1 / -1;">
-                    <label>Correo Electrónico</label>
-                    <input type="email" name="email" placeholder="correo@institucion.cl" value="{{ datos.get('email', '') }}" required>
-                </div>
 
-                <h3 class="section-title">2. Ficha Personal</h3>
+                <!-- SECCIÓN 2: TABLA DOCENTES -->
+                <h3 class="section-title">2. Ficha Personal (Docente)</h3>
                 
                 <div class="input-group">
                     <label>RUT (Con guion)</label>
                     <input type="text" name="rut" placeholder="12345678-9" value="{{ datos.get('rut', '') }}" required maxlength="12">
                 </div>
+
                 <div class="input-group">
                     <label>Nombres</label>
                     <input type="text" name="nombres" value="{{ datos.get('nombres', '') }}" required>
                 </div>
+
                 <div class="input-group">
                     <label>Apellido Paterno</label>
                     <input type="text" name="apellido_paterno" value="{{ datos.get('apellido_paterno', '') }}" required>
                 </div>
+
                 <div class="input-group">
                     <label>Apellido Materno</label>
                     <input type="text" name="apellido_materno" value="{{ datos.get('apellido_materno', '') }}" required>
                 </div>
+
+                <div class="input-group full-width">
+                    <label>Correo Electrónico Institucional</label>
+                    <input type="email" name="email" placeholder="correo@institucion.cl" value="{{ datos.get('email', '') }}" required>
+                </div>
+
                 <div class="input-group">
                     <label>Especialidad / Nivel</label>
                     <input type="text" name="especialidad_nivel" placeholder="Ej: Matemáticas" value="{{ datos.get('especialidad_nivel', '') }}" required>
                 </div>
+
                 <div class="input-group">
                     <label>Teléfono de Contacto</label>
                     <input type="text" name="fono" placeholder="+569..." value="{{ datos.get('fono', '') }}">
                 </div>
 
-                <h3 class="section-title">3. Prevención y Salud</h3>
 
-                <!-- EL SELECT: Aquí usamos un truco con 'if'. Si el dato guardado es 'O+', le pone la palabra 'selected' a esa opción -->
-                <div class="input-group">
-                    <label>Grupo Sanguíneo</label>
-                    <select name="grupo_sangre">
-                        <option value="No especificado" {% if datos.get('grupo_sangre') == 'No especificado' %}selected{% endif %}>No especificado</option>
-                        <option value="O+" {% if datos.get('grupo_sangre') == 'O+' %}selected{% endif %}>O+</option>
-                        <option value="O-" {% if datos.get('grupo_sangre') == 'O-' %}selected{% endif %}>O-</option>
-                        <option value="A+" {% if datos.get('grupo_sangre') == 'A+' %}selected{% endif %}>A+</option>
-                        <option value="A-" {% if datos.get('grupo_sangre') == 'A-' %}selected{% endif %}>A-</option>
-                        <option value="B+" {% if datos.get('grupo_sangre') == 'B+' %}selected{% endif %}>B+</option>
-                        <option value="B-" {% if datos.get('grupo_sangre') == 'B-' %}selected{% endif %}>B-</option>
-                        <option value="AB+" {% if datos.get('grupo_sangre') == 'AB+' %}selected{% endif %}>AB+</option>
-                        <option value="AB-" {% if datos.get('grupo_sangre') == 'AB-' %}selected{% endif %}>AB-</option>
-                    </select>
-                </div>
+                <!-- SECCIÓN 3: TABLA DIRECCIONES -->
+                <h3 class="section-title">3. Dirección Particular</h3>
 
-                <!-- LOS TEXTAREAS: Como no tienen 'value', el código se pone justo en el MEDIO de las dos etiquetas > < -->
-                <div class="input-group" style="grid-column: 1 / -1;">
-                    <label>Alergias</label>
-                    <textarea name="alergias" rows="2" placeholder="Ej: Penicilina, polen...">{{ datos.get('alergias', '') }}</textarea>
-                </div>
-
-                <div class="input-group" style="grid-column: 1 / -1;">
-                    <label>Enfermedades Crónicas</label>
-                    <textarea name="enfermedades_cronicas" rows="2" placeholder="Ej: Diabetes...">{{ datos.get('enfermedades_cronicas', '') }}</textarea>
-                </div>
-
-                <div class="input-group" style="grid-column: 1 / -1;">
-                    <label>Medicamentos Permanentes</label>
-                    <textarea name="medicamentos" rows="2" placeholder="Ej: Metformina...">{{ datos.get('medicamentos', '') }}</textarea>
-                </div>
-
-                <div class="input-group" style="grid-column: 1 / -1;">
-                    <label>Discapacidad / Movilidad Reducida</label>
-                    <input type="text" name="discapacidad" placeholder="Ej: Ninguna" value="{{ datos.get('discapacidad', '') }}">
-                </div>
-
-                <h3 class="section-title">4. Dirección Particular</h3>
-
-                <div class="input-group" style="grid-column: 1 / -1;">
+                <div class="input-group full-width">
                     <label>Calle y Número</label>
                     <input type="text" name="calle_numero" placeholder="Ej: Av. Principal 123" value="{{ datos.get('calle_numero', '') }}" required>
                 </div>
@@ -129,9 +119,48 @@
                     <input type="text" name="codigo_postal" placeholder="Ej: 2340000" value="{{ datos.get('codigo_postal', '') }}">
                 </div>
 
-                <div class="input-group" style="grid-column: 1 / -1;">
+                <div class="input-group full-width">
                     <label>Detalles adicionales</label>
                     <input type="text" name="detalles" placeholder="Ej: Depto 502, reja blanca..." value="{{ datos.get('detalles', '') }}">
+                </div>
+
+
+                <!-- SECCIÓN 4: TABLA DATOS_MEDICOS -->
+                <h3 class="section-title">4. Prevención y Salud (Datos Médicos)</h3>
+
+                <div class="input-group">
+                    <label>Grupo Sanguíneo</label>
+                    <select name="grupo_sangre">
+                        <option value="No especificado" {% if datos.get('grupo_sangre') == 'No especificado' %}selected{% endif %}>No especificado</option>
+                        <option value="O+" {% if datos.get('grupo_sangre') == 'O+' %}selected{% endif %}>O+</option>
+                        <option value="O-" {% if datos.get('grupo_sangre') == 'O-' %}selected{% endif %}>O-</option>
+                        <option value="A+" {% if datos.get('grupo_sangre') == 'A+' %}selected{% endif %}>A+</option>
+                        <option value="A-" {% if datos.get('grupo_sangre') == 'A-' %}selected{% endif %}>A-</option>
+                        <option value="B+" {% if datos.get('grupo_sangre') == 'B+' %}selected{% endif %}>B+</option>
+                        <option value="B-" {% if datos.get('grupo_sangre') == 'B-' %}selected{% endif %}>B-</option>
+                        <option value="AB+" {% if datos.get('grupo_sangre') == 'AB+' %}selected{% endif %}>AB+</option>
+                        <option value="AB-" {% if datos.get('grupo_sangre') == 'AB-' %}selected{% endif %}>AB-</option>
+                    </select>
+                </div>
+
+                <div class="input-group full-width">
+                    <label>Discapacidad / Movilidad Reducida</label>
+                    <input type="text" name="discapacidad" placeholder="Ej: Ninguna" value="{{ datos.get('discapacidad', '') }}">
+                </div>
+
+                <div class="input-group full-width">
+                    <label>Alergias</label>
+                    <textarea name="alergias" rows="2" placeholder="Ej: Penicilina, polen...">{{ datos.get('alergias', '') }}</textarea>
+                </div>
+
+                <div class="input-group full-width">
+                    <label>Enfermedades Crónicas</label>
+                    <textarea name="enfermedades_cronicas" rows="2" placeholder="Ej: Diabetes...">{{ datos.get('enfermedades_cronicas', '') }}</textarea>
+                </div>
+
+                <div class="input-group full-width">
+                    <label>Medicamentos Permanentes</label>
+                    <textarea name="medicamentos" rows="2" placeholder="Ej: Metformina...">{{ datos.get('medicamentos', '') }}</textarea>
                 </div>
 
                 <button type="submit" class="btn-submit">Guardar Ficha Completa del Docente</button>
@@ -140,6 +169,7 @@
         
         <a href="{{ url_for('admin_bp.admin_panel') }}" class="btn-back">← Volver al Panel de Administración</a>
     </div>
-
+    
+    <script src="{{ url_for('static', filename='js/docentes.js') }}"></script>
 </body>
 </html>

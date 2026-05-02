@@ -22,9 +22,9 @@
                     
                     <li class="nav-title">GESTIÓN</li>
                     <li><a href="{{ url_for('admin_bp.nuevo_docente') }}">Añadir Docente</a></li>
-                    <li><a href="#">Ver Docentes</a></li>
+                    <li><a href="{{ url_for('admin_bp.lista_docentes') }}">Ver Docentes</a></li>
                     <li><a href="#">Alumnos</a></li>
-                    <li><a href="{{ url_for('admin_bp.asignar_curso') }}">Cursos y Asignaturas</a></li>
+                    <li><a href="{{ url_for('admin_bp.lista_cursos') }}">Cursos y Asignaturas</a></li>
                     
                     <li class="nav-title">SISTEMA</li>
                     <li><a href="#">Configuración</a></li>

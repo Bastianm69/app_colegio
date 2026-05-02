@@ -80,3 +80,38 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #3498db
 @media (max-width: 600px) {
     .grid-container { grid-template-columns: 1fr; }
 }
+
+/* Campos que ocupan todo el ancho en el Grid */
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Estilo para el input del Rol que está bloqueado */
+.input-readonly {
+    background-color: #f0f0f0;
+    color: #555;
+    cursor: not-allowed;
+}
+
+/* Contenedor relativo para que el ojo flote adentro */
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Input de contraseña con espacio a la derecha para no tapar el ojo */
+.password-input {
+    width: 100%;
+    padding-right: 40px;
+    box-sizing: border-box;
+}
+
+/* El icono del ojo flotando a la derecha */
+.password-toggle-icon {
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    user-select: none;
+}

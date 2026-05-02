@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión AIEP - Editar Docente</title>
+    <!-- Referencia al archivo CSS externo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_docentes.css') }}">
+</head>
+<body>
+
+<div class="edit-container">
+    <div class="form-header">
+        <h2>Editar Perfil del Docente</h2>
+        <a href="{{ url_for('admin_bp.lista_docentes') }}" class="btn-back">← Volver a la lista</a>
+    </div>
+
+    <form method="POST">
+        <div class="grid-form">
+            <!-- SECCIÓN 1: IDENTIDAD -->
+            <div class="form-section-title">Identidad y Acceso</div>
+            
+            <div class="form-group">
+                <label>RUT (Identificador Único)</label>
+                <input type="text" name="rut" value="{{ d[0] }}" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label>Correo Electrónico Institucional</label>
+                <input type="email" name="email" value="{{ d[6] }}" required>
+            </div>
+
+            <!-- SECCIÓN 2: DATOS PERSONALES -->
+            <div class="form-section-title">Información Personal</div>
+            
+            <div class="form-group">
+                <label>Nombres</label>
+                <input type="text" name="nombres" value="{{ d[1] }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Apellido Paterno</label>
+                <input type="text" name="apellido_paterno" value="{{ d[2] }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Apellido Materno</label>
+                <input type="text" name="apellido_materno" value="{{ d[3] }}">
+            </div>
+
+            <div class="form-group">
+                <label>Especialidad / Nivel Académico</label>
+                <input type="text" name="especialidad_nivel" value="{{ d[4] }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Teléfono de Contacto</label>
+                <input type="text" name="fono" value="{{ d[5] }}">
+            </div>
+
+            <!-- SECCIÓN 3: DIRECCIÓN -->
+            <div class="form-section-title">Residencia</div>
+            
+            <div class="form-group">
+                <label>Calle y Número</label>
+                <input type="text" name="calle_numero" value="{{ d[7] }}">
+            </div>
+
+            <div class="form-group">
+                <label>Comuna</label>
+                <input type="text" name="comuna" value="{{ d[8] }}">
+            </div>
+
+            <div class="form-group">
+                <label>Región</label>
+                <input type="text" name="region" value="{{ d[9] }}">
+            </div>
+
+            <div class="form-group">
+                <label>Código Postal</label>
+                <input type="text" name="codigo_postal" value="{{ d[10] }}">
+            </div>
+
+            <div class="form-group full-width">
+                <label>Detalles Adicionales (Block, Depto, Villa)</label>
+                <textarea name="detalles" rows="2">{{ d[11] }}</textarea>
+            </div>
+
+            <!-- SECCIÓN 4: SALUD -->
+            <div class="form-section-title">Ficha Médica de Emergencia</div>
+            
+            <div class="form-group">
+                <label>Grupo Sanguíneo</label>
+                <input type="text" name="grupo_sangre" value="{{ d[12] }}">
+            </div>
+
+            <div class="form-group">
+                <label>Discapacidad</label>
+                <input type="text" name="discapacidad" value="{{ d[13] }}">
+            </div>
+
+            <div class="form-group full-width">
+                <label>Alergias Conocidas</label>
+                <textarea name="alergias" rows="2">{{ d[14] }}</textarea>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Enfermedades Crónicas</label>
+                <textarea name="enfermedades_cronicas" rows="2">{{ d[15] }}</textarea>
+            </div>
+
+            <div class="form-group full-width">
+                <label>Medicamentos en Uso</label>
+                <textarea name="medicamentos" rows="2">{{ d[16] }}</textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-save">GUARDAR CAMBIOS INSTITUCIONALES</button>
+    </form>
+</div>
+
+</body>
+</html>

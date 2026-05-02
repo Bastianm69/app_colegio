@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración - Listado de Docentes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_docentes.css') }}">
+</head>
+<body>
+
+    <div class="main-container">
+        <header class="section-header">
+            <div class="title-group">
+                <h1>Gestión de Personal Docente</h1>
+                <p>Visualiza y administra la información de los docentes registrados.</p>
+            </div>
+            <a href="{{ url_for('admin_bp.nuevo_docente') }}" class="btn-primary">
+                <span class="icon">+</span> Registrar Nuevo Docente
+            </a>
+        </header>
+
+        <div class="card-table">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>RUT</th>
+                        <th>Nombre Completo</th>
+                        <th>Especialidad / Nivel</th>
+                        <th>Email Institucional</th>
+                        <th>Comuna</th>
+                        <th>Estado</th> <!-- 1. Agregamos el encabezado -->
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in docentes %}
+                    <tr>
+                        <td class="rut-cell">{{ d[0] }}</td>
+                        <td>{{ d[1] }} {{ d[2] }} {{ d[3] }}</td>
+                        <td><span class="tag-specialty">{{ d[4] }}</span></td>
+                        <td>{{ d[5] }}</td>
+                        <td>{{ d[6] or 'Sin asignar' }}</td>
+                        
+                        <!-- 2. Mostramos el estado (Vigente/Inactivo) -->
+                        <td>
+                            {% if d[7] %}
+                                <span class="badge badge-activo">Vigente</span>
+                            {% else %}
+                                <span class="badge badge-inactivo">Inactivo</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="actions-cell">
+                            <a href="{{ url_for('admin_bp.editar_docente', rut=d[0]) }}" class="btn-action edit">Editar</a> 
+                            
+                            <!-- 3. Solo mostramos 'Eliminar' si el docente está activo -->
+                            {% if d[7] %}
+                                <a href="javascript:void(0);" onclick="confirmarBaja('{{ d[0] }}')" class="btn-action btn-delete">Eliminar</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <!-- 4. Ajustamos el colspan a 7 porque ahora hay una columna más -->
+                        <td colspan="7" class="empty-state">
+                            No se encontraron docentes registrados en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="view-footer">
+            <a href="{{ url_for('admin_bp.admin_panel') }}" class="btn-secondary">
+                ← Volver al Panel de Control
+            </a>
+        </footer>
+    </div>
+
+</body>
+</html>
+
+<script>
+    function confirmarBaja(rut) {
+        console.log("Iniciando confirmación para el RUT:", rut);
+
+        if (confirm("¿Estás seguro de desactivar al docente con RUT " + rut + "?\nEsta acción cambiará su estado a Inactivo.")) {
+            const baseUrl = "{{ url_for('admin_bp.eliminar_docente', rut='PLACEHOLDER') }}";
+            const finalUrl = baseUrl.replace('PLACEHOLDER', rut);
+            
+            console.log("Redirigiendo a:", finalUrl);
+            window.location.href = finalUrl;
+        }
+    }
+</script>
