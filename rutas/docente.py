@@ -7,10 +7,20 @@ docente_bp = Blueprint('docente_bp', __name__)
 # 1. RUTA PRINCIPAL: Panel de Control del Docente
 @docente_bp.route('/docente')
 def panel_docente():
-    # Seguridad: Si no es docente, para afuera
-    if 'user_id' not in session or session.get('rol') != 'DOCENTE':
+    # --- LOGS DE DEPURACIÓN ---
+    print("--- DEBUG ACCESO PANEL DOCENTE ---")
+    print(f"User ID en sesión: {session.get('user_id')}")
+    print(f"Roles en sesión: {session.get('roles')}")
+
+    # Seguridad: Verificamos si el usuario está logueado y si 'DOCENTE' está en su lista de roles
+    # TIP: Asegúrate de que en tu BD diga 'DOCENTE' (mayúsculas) o 'Docente'
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'DOCENTE' not in roles_usuario:
+        print("--- DEBUG: Acceso denegado al Panel Docente. Redirigiendo al Login ---")
         return redirect(url_for('auth_bp.login'))
 
+    print("--- DEBUG: Acceso concedido al Panel Docente ---")
+    
     conn = obtener_conexion()
     clases = []
     nombre_profesor = "Docente"
@@ -35,7 +45,7 @@ def panel_docente():
                     WHERE ca.id_docente = %s
                 """
                 cur.execute(query_clases, (id_docente,))
-                clases = cur.fetchall() # Esto nos trae una lista de sus cursos
+                clases = cur.fetchall() 
                 
         except Exception as e:
             print(f"Error en panel docente: {e}")

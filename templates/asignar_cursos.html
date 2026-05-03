@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Cursos - AdminEscolar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/asignar_cursos.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <!-- Barra lateral de navegación -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>AdminEscolar</h2>
+                <p>Bienvenido, <strong>{{ session.get('nombre_usuario', 'Administrador') }}</strong></p>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="{{ url_for('admin_bp.admin_panel') }}">Inicio</a></li>
+                    <li class="nav-title">GESTIÓN</li>
+                    <li><a href="{{ url_for('admin_bp.nuevo_docente') }}">Añadir Docente</a></li>
+                    <li><a href="{{ url_for('admin_bp.lista_docentes') }}">Ver Docentes</a></li>
+                    <li><a href="#">Alumnos</a></li>
+                    <li><a href="{{ url_for('admin_bp.lista_cursos') }}" class="active">Cursos y Asignaturas</a></li>
+                    <li class="nav-title">SISTEMA</li>
+                    <li><a href="{{ url_for('auth_bp.logout') }}" class="logout-btn">Cerrar Sesión</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <!-- Contenido principal a la derecha -->
+        <main class="main-content">
+            <header class="top-header">
+                <h1>Gestión de Cursos y Jefaturas</h1>
+                <span>Administración > Cursos</span>
+            </header>
+
+            <section class="content-area">
+                <div class="table-container">
+                    <h3>Listado de Cursos</h3>
+                    <p class="subtitle-text">Asigna profesores jefes y administra las materias que cursará cada nivel.</p>
+
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Nivel</th>
+                                <th>Curso</th>
+                                <th>Profesor Jefe Actual</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in cursos %}
+                            <tr>
+                                <td>{{ curso[2] }}</td> <!-- Nivel -->
+                                <td>{{ curso[1] }}</td> <!-- Nombre Curso -->
+                                <td>
+                                    {% if curso[3] %}
+                                        <strong>{{ curso[3] }} {{ curso[4] }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">Sin asignar</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- Botón que activa nuestra función JS en vez de Bootstrap -->
+                                    <button type="button" class="btn-action btn-primary" onclick="abrirModalJefe('{{ curso[0] }}', '{{ curso[1] }}')">
+                                        Asignar Jefe
+                                    </button>
+                                    
+                                    <a href="{{ url_for('admin_bp.gestionar_carga', id_curso=curso[0]) }}" class="btn-action btn-info">
+                                        Ver Materias
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="empty-message">
+                                    No hay cursos registrados en el sistema.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Esqueleto del Modal en HTML Puro -->
+    <div id="modalJefe" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Asignar Jefatura</h3>
+                <button type="button" class="close-btn" onclick="cerrarModalJefe()">&times;</button>
+            </div>
+            
+            <!-- Asegúrate de reemplazar la ruta de la acción con la tuya -->
+            <form id="formJefatura" action="#" method="POST">
+                <input type="hidden" name="id_curso" id="cursoIdInput">
+                
+                <div class="input-group">
+                    <label>Seleccionar Docente</label>
+                    <select name="id_docente" required>
+                        <option value="" disabled selected>Busca un docente...</option>
+                        <!-- Ejemplo de llenado (requiere enviar 'docentes' desde el backend) -->
+                        <!-- {% for d in docentes %}
+                            <option value="{{ d[0] }}">{{ d[1] }} {{ d[2] }}</option>
+                        {% endfor %} -->
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-action btn-primary btn-block">
+                    Guardar Jefatura
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts para controlar el Modal de forma nativa -->
+    <script>
+        function abrirModalJefe(idCurso, nombreCurso) {
+            document.getElementById('modalJefe').style.display = 'flex';
+            document.getElementById('cursoIdInput').value = idCurso;
+            document.getElementById('modalTitle').innerText = 'Asignar Jefatura - ' + nombreCurso;
+        }
+
+        function cerrarModalJefe() {
+            document.getElementById('modalJefe').style.display = 'none';
+        }
+        
+        // Si el usuario hace clic fuera de la caja blanca del modal, se cierra
+        window.onclick = function(event) {
+            let modal = document.getElementById('modalJefe');
+            if (event.target == modal) {
+                cerrarModalJefe();
+            }
+        }
+    </script>
+</body>
+</html>

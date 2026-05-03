@@ -70,10 +70,13 @@ def login():
 
                 # Validamos contraseña con el hash
                 if user_found and check_password_hash(user_found[4], password_f):
-                    id_usuario, nombre_u, rol, email_docente = user_found[:4]
+                    
+                    # CAMBIO CLAVE: Cambiamos 'rol' por 'roles' para entender que ahora es una lista
+                    id_usuario, nombre_u, roles, email_docente = user_found[:4]
                     
                     session['pre_login_id'] = id_usuario
-                    session['pre_login_rol'] = rol
+                    # Guardamos la lista completa en la sesión
+                    session['pre_login_roles'] = roles 
                     session['pre_login_nombre'] = nombre_u 
                     
                     cur.execute("CALL sp_registrar_intento_login(%s, %s, %s, %s)", 
@@ -110,31 +113,50 @@ def login():
 @auth_bp.route('/verificar', methods=['GET', 'POST'])
 def verificar():
     if 'pre_login_id' not in session:
+        print("--- DEBUG: No hay pre_login_id en sesión, abortando ---")
         return redirect(url_for('auth_bp.login'))
 
     error = None
     if request.method == 'POST':
         codigo_web = request.form.get('codigo')
         user_id = session['pre_login_id']
-        rol = session['pre_login_rol']
+        roles = session.get('pre_login_roles', []) 
         
+        print(f"--- DEBUG VERIFICACIÓN ---")
+        print(f"Usuario ID: {user_id}")
+        print(f"Roles en pre-login: {roles}")
+        print(f"Código ingresado: {codigo_web}")
+
         conn = obtener_conexion()
         es_codigo_valido = verificar_token_db(user_id, codigo_web, conn)
         conn.close()
         
+        print(f"¿Código válido según DB?: {es_codigo_valido}")
+
         if es_codigo_valido:
+            # Seteamos la sesión definitiva
             session['user_id'] = user_id
-            session['rol'] = rol
-            session['nombre_usuario'] = session.pop('pre_login_nombre', 'Administrador')
+            session['roles'] = roles 
+            session['nombre_usuario'] = session.pop('pre_login_nombre', 'Usuario')
             
+            print(f"Sesión establecida: user_id={session['user_id']}, roles={session['roles']}")
+
+            # Limpiamos temporales
             session.pop('pre_login_id', None)
-            session.pop('pre_login_rol', None)
+            session.pop('pre_login_roles', None) 
             
-            if rol == 'ADMIN':
+            # Lógica de redirección
+            if 'ADMIN' in roles:
+                print("--- DEBUG: Redirigiendo a PANEL ADMIN ---")
                 return redirect(url_for('admin_bp.admin_panel'))
-            else:
+            elif 'DOCENTE' in roles: 
+                print("--- DEBUG: Redirigiendo a PANEL DOCENTE ---")
                 return redirect(url_for('docente_bp.panel_docente'))
+            else:
+                print(f"--- DEBUG: No se encontró un IF para los roles: {roles} ---")
+                error = "Tu cuenta no tiene un panel asignado."
         else:
+            print("--- DEBUG: El código no coincidió o expiró ---")
             error = "Código incorrecto o expirado."
 
     return render_template('verificar.html', error=error)

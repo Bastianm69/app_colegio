@@ -38,46 +38,38 @@ def nuevo_docente():
         
         # 1. Ver qué datos llegan del HTML
         datos = dict(request.form)
-        print(f"LOG: Datos capturados del formulario: {datos}")
+        print(f"LOG: Datos capturados: {datos}")
         
-        # 2. Verificar el RUT
+        # Validación del RUT
         rut_valido = validar_rut(datos.get('rut'))
-        print(f"LOG: ¿RUT válido? {'SÍ' if rut_valido else 'NO'} ({datos.get('rut')})")
-        
         if not rut_valido:
-            print("LOG: Abortando por RUT inválido.")
+            print(f"LOG: RUT inválido abortando: {datos.get('rut')}")
             flash("Error: El RUT ingresado no tiene un formato válido.", "error")
             return render_template('nuevo_docente.html', datos=datos)
 
-        # 3. Intento de conexión
-        print("LOG: Intentando conectar a la base de datos...")
+        # Intento de conexión y registro
         conn = obtener_conexion()
-        
         if conn:
-            print("LOG: Conexión establecida con éxito.")
             try:
-                # 4. Llamada a la lógica de BD
-                print("LOG: Llamando a la función registrar_docente_db...")
+                # 2. Llamada a la lógica que ya arreglamos antes
+                print("LOG: Llamando a registrar_docente_db...")
                 exito, mensaje = registrar_docente_db(datos, conn)
                 
-                print(f"LOG: Resultado de la función DB: exito={exito}, mensaje={mensaje}")
-                
-                conn.close()
-                print("LOG: Conexión cerrada.")
+                print(f"LOG: Resultado DB: exito={exito}, mensaje={mensaje}")
                 
                 if exito:
-                    print("LOG: Redirigiendo al panel por éxito.")
                     flash(mensaje, "success")
                     return redirect(url_for('admin_bp.admin_panel'))
                 else:
-                    print(f"LOG: Error reportado por la lógica de BD: {mensaje}")
                     flash(mensaje, "error")
             except Exception as e:
-                print(f"LOG: ¡ERROR CRÍTICO inesperado en la ruta!: {str(e)}")
+                print(f"LOG: ERROR CRÍTICO: {str(e)}")
                 flash(f"Error inesperado: {e}", "error")
+            finally:
+                conn.close()
+                print("LOG: Conexión cerrada.")
         else:
-            print("LOG: ERROR - No se pudo obtener la conexión (conn es None)")
-            flash("Error técnico: No se pudo establecer conexión con el servidor.", "error")
+            flash("Error técnico: No se pudo establecer conexión.", "error")
         
         print("<<<" * 10 + "\n")
 
@@ -151,10 +143,42 @@ def editar_docente(rut):
 # ==============================================================================
 # MÓDULO: ASIGNAR CURSO (Preparado para el próximo SP)
 # ==============================================================================
-@admin_bp.route('/asignar-curso/<rut>')
-def asignar_curso(rut):
-    # Por ahora solo retornamos un mensaje para que no de error
-    return redirect(url_for('admin_bp.asignar_curso', rut=rut))
+@admin_bp.route('/asignar-cursos')
+def asignar_cursos_vista():
+    # El guardia de seguridad plural que ya conocemos
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'ADMIN' not in roles_usuario:
+        return redirect(url_for('auth_bp.login'))
+
+    conn = obtener_conexion()
+    cursos = []
+    docentes = []
+
+    if conn:
+        try:
+            cur = conn.cursor()
+            
+            # 1. Obtenemos los cursos y el nombre de su jefe actual (si tiene)
+            query_cursos = """
+                SELECT c.id_curso, c.nombre_curso, c.nivel, d.nombres, d.apellido_paterno, c.id_profesor_jefe
+                FROM cursos c
+                LEFT JOIN docentes d ON c.id_profesor_jefe = d.id_docente
+                ORDER BY c.nivel, c.nombre_curso
+            """
+            cur.execute(query_cursos)
+            cursos = cur.fetchall()
+
+            # 2. Obtenemos la lista de todos los docentes para los select del HTML
+            cur.execute("SELECT id_docente, nombres, apellido_paterno FROM docentes ORDER BY apellido_paterno")
+            docentes = cur.fetchall()
+
+        except Exception as e:
+            print(f"Error al cargar vista de asignación: {e}")
+        finally:
+            cur.close()
+            conn.close()
+
+    return render_template('admin/asignar_cursos.html', cursos=cursos, docentes=docentes)
 
 @admin_bp.route('/cursos')
 def lista_cursos():
