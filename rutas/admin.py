@@ -14,8 +14,9 @@ admin_bp = Blueprint('admin_bp', __name__)
 # ==============================================================================
 @admin_bp.route('/admin')
 def admin_panel():
-    # Seguridad: Solo permitimos la entrada si es ADMIN y tiene sesión iniciada
-    if 'user_id' not in session or session.get('rol') != 'ADMIN':
+    # Seguridad: Verificamos en la lista 'roles' en lugar de 'rol'
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'ADMIN' not in roles_usuario:
         return redirect(url_for('auth_bp.login'))
     
     nombre_admin = session.get('nombre_usuario', 'Administrador')
@@ -25,9 +26,10 @@ def admin_panel():
 # MÓDULO: REGISTRAR NUEVO DOCENTE
 # ==============================================================================
 @admin_bp.route('/nuevo-docente', methods=['GET', 'POST'])
-@admin_bp.route('/nuevo-docente', methods=['GET', 'POST'])
 def nuevo_docente():
-    if 'user_id' not in session or session.get('rol') != 'ADMIN':
+    # Seguridad: Actualizado al sistema de múltiples roles
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'ADMIN' not in roles_usuario:
         return redirect(url_for('auth_bp.login'))
 
     datos = {}
@@ -51,7 +53,7 @@ def nuevo_docente():
         conn = obtener_conexion()
         if conn:
             try:
-                # 2. Llamada a la lógica que ya arreglamos antes
+                # 2. Llamada a la lógica de base de datos
                 print("LOG: Llamando a registrar_docente_db...")
                 exito, mensaje = registrar_docente_db(datos, conn)
                 
@@ -178,11 +180,78 @@ def asignar_cursos_vista():
             cur.close()
             conn.close()
 
-    return render_template('admin/asignar_cursos.html', cursos=cursos, docentes=docentes)
+    return render_template('asignar_cursos.html', cursos=cursos, docentes=docentes)
 
 @admin_bp.route('/cursos')
 def lista_cursos():
     return "dios escucha este programador"
+
+@admin_bp.route('/asignar-clases', methods=['GET', 'POST'])
+def asignar_clases():
+    # Guardia plural de seguridad
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'ADMIN' not in roles_usuario:
+        return redirect(url_for('auth_bp.login'))
+
+    conn = obtener_conexion()
+    docentes = []
+    cursos = []
+    asignaturas = []
+    cargas_actuales = []
+
+    if conn:
+        try:
+            cur = conn.cursor()
+
+            # SI EL USUARIO PRESIONÓ EL BOTÓN "ASIGNAR" (POST)
+            if request.method == 'POST':
+                id_docente = request.form.get('id_docente')
+                id_curso = request.form.get('id_curso')
+                id_asignatura = request.form.get('id_asignatura')
+                anio = 2026 # Puedes cambiarlo o hacerlo dinámico después
+
+                # Insertamos en la tabla puente (carga_academica)
+                query_insert = """
+                    INSERT INTO carga_academica (id_docente, id_curso, id_asignatura, anio_escolar)
+                    VALUES (%s, %s, %s, %s)
+                """
+                cur.execute(query_insert, (id_docente, id_curso, id_asignatura, anio))
+                conn.commit()
+                flash("Clase asignada correctamente al docente.", "success")
+                return redirect(url_for('admin_bp.asignar_clases'))
+
+            # SI SOLO ESTÁ ENTRANDO A LA PÁGINA (GET)
+            # 1. Traemos datos para los Selectores (Combobox)
+            cur.execute("SELECT id_docente, nombres, apellido_paterno FROM docentes ORDER BY apellido_paterno")
+            docentes = cur.fetchall()
+
+            cur.execute("SELECT id_curso, nivel, nombre_curso FROM cursos ORDER BY nivel, nombre_curso")
+            cursos = cur.fetchall()
+
+            cur.execute("SELECT id_asignatura, nombre_asignatura FROM asignaturas ORDER BY nombre_asignatura")
+            asignaturas = cur.fetchall()
+
+            # 2. Traemos el historial de lo que ya está asignado para mostrarlo en la tabla
+            query_historial = """
+                SELECT ca.id_carga, d.nombres, d.apellido_paterno, c.nivel, c.nombre_curso, a.nombre_asignatura
+                FROM carga_academica ca
+                JOIN docentes d ON ca.id_docente = d.id_docente
+                JOIN cursos c ON ca.id_curso = c.id_curso
+                JOIN asignaturas a ON ca.id_asignatura = a.id_asignatura
+                WHERE ca.anio_escolar = 2026
+                ORDER BY d.apellido_paterno, c.nivel
+            """
+            cur.execute(query_historial)
+            cargas_actuales = cur.fetchall()
+
+        except Exception as e:
+            conn.rollback() # Si hay error (ej. clase duplicada), deshacemos
+            flash(f"Error al asignar clase: probablemente ya existe. Detalles: {e}", "error")
+        finally:
+            cur.close()
+            conn.close()
+
+    return render_template('asignar_clases.html', docentes=docentes, cursos=cursos, asignaturas=asignaturas, cargas=cargas_actuales)
 
 
 

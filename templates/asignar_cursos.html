@@ -3,139 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Cursos - AdminEscolar</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_layout.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/asignar_cursos.css') }}">
+    <title>Asignar Cursos - Admin</title>
+    
+    <!-- Bootstrap 5 CSS para que se vea profesional -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome para los iconos (Lo restauré por si acaso) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Personalizado usando la ruta dinámica de Flask -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='asignar_cursos.css') }}">
 </head>
-<body>
-    <div class="dashboard-container">
-        
-        <!-- Barra lateral de navegación -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>AdminEscolar</h2>
-                <p>Bienvenido, <strong>{{ session.get('nombre_usuario', 'Administrador') }}</strong></p>
+<body class="bg-light">
+
+    <!-- Barra de navegación simple -->
+    <nav class="navbar navbar-dark bg-dark mb-4 shadow">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-school"></i> Panel de Administración
+            </span>
+            <!-- Botón para volver a tu panel admin -->
+            <a href="{{ url_for('admin_bp.admin_panel') }}" class="btn btn-outline-light btn-sm">
+                Volver al Panel
+            </a>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center pt-3 pb-3">
+                <h4 class="mb-0"><i class="fas fa-users-cog"></i> Gestión de Profesores Jefes</h4>
             </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="{{ url_for('admin_bp.admin_panel') }}">Inicio</a></li>
-                    <li class="nav-title">GESTIÓN</li>
-                    <li><a href="{{ url_for('admin_bp.nuevo_docente') }}">Añadir Docente</a></li>
-                    <li><a href="{{ url_for('admin_bp.lista_docentes') }}">Ver Docentes</a></li>
-                    <li><a href="#">Alumnos</a></li>
-                    <li><a href="{{ url_for('admin_bp.lista_cursos') }}" class="active">Cursos y Asignaturas</a></li>
-                    <li class="nav-title">SISTEMA</li>
-                    <li><a href="{{ url_for('auth_bp.logout') }}" class="logout-btn">Cerrar Sesión</a></li>
-                </ul>
-            </nav>
-        </aside>
-        <!-- Contenido principal a la derecha -->
-        <main class="main-content">
-            <header class="top-header">
-                <h1>Gestión de Cursos y Jefaturas</h1>
-                <span>Administración > Cursos</span>
-            </header>
+            
+            <div class="card-body">
+                
+                <!-- Mensajes de éxito o error cuando Flask asigna al profe -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
-            <section class="content-area">
-                <div class="table-container">
-                    <h3>Listado de Cursos</h3>
-                    <p class="subtitle-text">Asigna profesores jefes y administra las materias que cursará cada nivel.</p>
-
-                    <table class="styled-table">
-                        <thead>
+                <!-- Tabla donde listamos los cursos -->
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
                             <tr>
                                 <th>Nivel</th>
                                 <th>Curso</th>
                                 <th>Profesor Jefe Actual</th>
-                                <th>Acciones</th>
+                                <th class="text-center">Asignar Nueva Jefatura</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Flask inyecta la lista de cursos aquí -->
                             {% for curso in cursos %}
                             <tr>
-                                <td>{{ curso[2] }}</td> <!-- Nivel -->
-                                <td>{{ curso[1] }}</td> <!-- Nombre Curso -->
+                                <td><strong>{{ curso[2] }}</strong></td>
+                                <td>{{ curso[1] }}</td>
+                                
                                 <td>
                                     {% if curso[3] %}
-                                        <strong>{{ curso[3] }} {{ curso[4] }}</strong>
+                                        <span class="badge bg-success">
+                                            {{ curso[3] }} {{ curso[4] }}
+                                        </span>
                                     {% else %}
-                                        <span class="text-muted">Sin asignar</span>
+                                        <span class="badge bg-warning text-dark">Sin Asignar</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <!-- Botón que activa nuestra función JS en vez de Bootstrap -->
-                                    <button type="button" class="btn-action btn-primary" onclick="abrirModalJefe('{{ curso[0] }}', '{{ curso[1] }}')">
-                                        Asignar Jefe
-                                    </button>
-                                    
-                                    <a href="{{ url_for('admin_bp.gestionar_carga', id_curso=curso[0]) }}" class="btn-action btn-info">
-                                        Ver Materias
-                                    </a>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" class="empty-message">
-                                    No hay cursos registrados en el sistema.
+                                
+                                <td class="text-center">
+                                    <!-- Formulario para enviar los datos al Python -->
+                                    <form action="{{ url_for('admin_bp.asignar_jefe') }}" method="POST" class="d-flex justify-content-center gap-2">
+                                        <!-- ID del curso oculto -->
+                                        <input type="hidden" name="id_curso" value="{{ curso[0] }}">
+                                        
+                                        <!-- Selector de docentes -->
+                                        <select name="id_docente" class="form-select form-select-sm w-auto" required>
+                                            <option value="" disabled selected>Seleccione Docente...</option>
+                                            {% for docente in docentes %}
+                                                <option value="{{ docente[0] }}">{{ docente[2] }}, {{ docente[1] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        
+                                        <!-- Botón de confirmar -->
+                                        <button type="submit" class="btn btn-primary btn-sm">Asignar</button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Esqueleto del Modal en HTML Puro -->
-    <div id="modalJefe" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">Asignar Jefatura</h3>
-                <button type="button" class="close-btn" onclick="cerrarModalJefe()">&times;</button>
             </div>
-            
-            <!-- Asegúrate de reemplazar la ruta de la acción con la tuya -->
-            <form id="formJefatura" action="#" method="POST">
-                <input type="hidden" name="id_curso" id="cursoIdInput">
-                
-                <div class="input-group">
-                    <label>Seleccionar Docente</label>
-                    <select name="id_docente" required>
-                        <option value="" disabled selected>Busca un docente...</option>
-                        <!-- Ejemplo de llenado (requiere enviar 'docentes' desde el backend) -->
-                        <!-- {% for d in docentes %}
-                            <option value="{{ d[0] }}">{{ d[1] }} {{ d[2] }}</option>
-                        {% endfor %} -->
-                    </select>
-                </div>
-
-                <button type="submit" class="btn-action btn-primary btn-block">
-                    Guardar Jefatura
-                </button>
-            </form>
         </div>
     </div>
 
-    <!-- Scripts para controlar el Modal de forma nativa -->
-    <script>
-        function abrirModalJefe(idCurso, nombreCurso) {
-            document.getElementById('modalJefe').style.display = 'flex';
-            document.getElementById('cursoIdInput').value = idCurso;
-            document.getElementById('modalTitle').innerText = 'Asignar Jefatura - ' + nombreCurso;
-        }
-
-        function cerrarModalJefe() {
-            document.getElementById('modalJefe').style.display = 'none';
-        }
-        
-        // Si el usuario hace clic fuera de la caja blanca del modal, se cierra
-        window.onclick = function(event) {
-            let modal = document.getElementById('modalJefe');
-            if (event.target == modal) {
-                cerrarModalJefe();
-            }
-        }
-    </script>
+    <!-- Bootstrap JS para que funcionen las alertas -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
