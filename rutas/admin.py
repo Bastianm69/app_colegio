@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from db_connection import obtener_conexion
 from validaciones import validar_rut 
 from db_registrar_docente import registrar_docente_db
 from db_registrar_docente import obtener_todos_los_docentes, dar_de_baja_docente_db
 from db_registrar_docente import obtener_docente_por_rut, actualizar_docente_db
+
 import logging
 
 
@@ -84,47 +85,175 @@ def nuevo_docente():
 
 @admin_bp.route('/nuevo-alumno', methods=['GET', 'POST'])
 def nuevo_alumno():
-    # ... validación de sesión ...
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'ADMIN' not in roles_usuario:
+        return redirect(url_for('auth_bp.login'))
+
     conn = obtener_conexion()
     cur = conn.cursor()
 
     if request.method == 'POST':
         d = request.form
-        # Capturamos el checkbox (viene como 'on' si está marcado)
         vive_con = True if d.get('vive_con') == 'on' else False
         
+        # VERIFICAMOS SI LA CASILLA ESTÁ MARCADA
+        crear_alumno = True if d.get('check_alumno') == 'on' else False
+        
         try:
-            cur.execute("""
-                CALL sp_matricular_alumno_completo(
-                    %s, %s, %s, %s, %s, %s, %s, %s::INT, %s,
-                    %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s,
-                    %s, %s, %s, %s, %s
-                )""", (
-                    # Alumno
-                    d.get('rut_al'), d.get('nom_al'), d.get('ape_p_al'), d.get('ape_m_al'),
-                    d.get('fec_nac'), d.get('genero'), d.get('nacionalidad'), d.get('id_curso'), vive_con,
-                    # Apoderado
-                    d.get('rut_apo'), d.get('nom_apo'), d.get('ape_p_apo'), d.get('ape_m_apo'),
-                    d.get('fono_apo'), d.get('email_apo'),
-                    # Dirección
-                    d.get('calle'), d.get('comuna'), d.get('region'),
-                    # Emergencia
-                    d.get('nom_em'), d.get('ape_p_em'), d.get('ape_m_em'), d.get('fono_em'), d.get('paren_em')
-                ))
+            if crear_alumno:
+                # FLUJO 1: Guardar Apoderado + Matricular Alumno
+                cur.execute("""
+                    CALL sp_matricular_alumno_completo(
+                        %s, %s, %s, %s, %s, %s, %s, %s::INT,
+                        %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s
+                    )""", (
+                        d.get('rut_al'), d.get('nom_al'), d.get('ape_p_al'), d.get('ape_m_al'),
+                        d.get('fec_nac'), d.get('genero'), d.get('nacionalidad'), d.get('id_curso'),
+                        d.get('rut_apo'), d.get('nom_apo'), d.get('ape_p_apo'), d.get('ape_m_apo'),
+                        d.get('parentesco_apo'), d.get('fono_apo'), d.get('email_apo'), vive_con,
+                        d.get('calle'), d.get('comuna'), d.get('region'), d.get('cod_postal'), d.get('detalles_dir')
+                    ))
+                flash("Apoderado guardado y Alumno matriculado con éxito.", "success")
+            else:
+                # FLUJO 2: Solo guardar/actualizar Apoderado
+                cur.execute("""
+                    CALL sp_gestionar_apoderado_solo(
+                        %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s
+                    )""", (
+                        d.get('rut_apo'), d.get('nom_apo'), d.get('ape_p_apo'), d.get('ape_m_apo'),
+                        d.get('parentesco_apo'), d.get('fono_apo'), d.get('email_apo'), vive_con,
+                        d.get('calle'), d.get('comuna'), d.get('region'), d.get('cod_postal'), d.get('detalles_dir')
+                    ))
+                flash("Datos del apoderado actualizados correctamente.", "success")
+            
             conn.commit()
-            flash("Matrícula procesada correctamente. El alumno ya tiene acceso al sistema.", "success")
             return redirect(url_for('admin_bp.admin_panel'))
+            
         except Exception as e:
             conn.rollback()
-            flash(f"Error en la matrícula: {e}", "danger")
+            print(f"ERROR: {e}")
+            flash(f"Error en la BD: {e}", "error")
             
-    # Carga de cursos para el select
-    cur.execute("SELECT id_curso, nivel, nombre_curso FROM cursos WHERE anio_academico = 2026")
+    cur.execute("SELECT id_curso, nivel, nombre_curso FROM cursos WHERE anio_academico = 2026 ORDER BY id_curso ASC")
     cursos = cur.fetchall()
     cur.close()
     conn.close()
     return render_template('nuevo_alumno.html', cursos=cursos)
+
+
+# 2. LA NUEVA API PARA EL BOTÓN BUSCAR (AJAX)
+@admin_bp.route('/api/buscar-apoderado/<rut>', methods=['GET'])
+def api_buscar_apoderado(rut):
+    conn = obtener_conexion()
+    if not conn:
+        return jsonify({'error': 'Sin conexión'}), 500
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT a.nombres, a.apellido_paterno, a.apellido_materno, a.parentesco, 
+                   a.fono, a.email,
+                   d.calle_numero, d.comuna, d.region, d.codigo_postal, d.detalles
+            FROM public.apoderados a
+            LEFT JOIN public.direcciones d ON a.id_direccion = d.id_direccion
+            WHERE a.rut = %s
+        """, (rut,))
+        
+        datos = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if datos:
+            return jsonify({
+                'encontrado': True,
+                'nombres': datos[0], 'ape_p': datos[1], 'ape_m': datos[2],
+                'parentesco': datos[3], 'fono': datos[4], 'email': datos[5],
+                'calle': datos[6], 'comuna': datos[7], 'region': datos[8],
+                'cod_postal': datos[9] or '', 'detalles': datos[10] or ''
+            })
+        else:
+            return jsonify({'encontrado': False})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+            
+    # 3. GET: Cargar la lista de cursos para el <select> del formulario
+    try:
+        cur.execute("SELECT id_curso, nivel, nombre_curso FROM cursos WHERE anio_academico = 2026 ORDER BY id_curso ASC")
+        cursos = cur.fetchall()
+    except Exception as e:
+        print(f"LOG ERROR CURSOS: {str(e)}")
+        cursos = []
+    finally:
+        cur.close()
+        conn.close()
+
+    return render_template('nuevo_alumno.html', cursos=cursos)
+
+# ==============================================================================
+# MÓDULO: VER alumnos con sus apoderados y cursos (vista tipo "familias")
+# ==============================================================================
+
+@admin_bp.route('/familias', methods=['GET'])
+def ver_familias():
+    # Validar sesión de admin
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'ADMIN' not in roles_usuario:
+        return redirect(url_for('auth_bp.login'))
+
+    conn = obtener_conexion()
+    cur = conn.cursor()
+
+    try:
+        # Obtenemos apoderados cruzados con sus alumnos y el curso de cada alumno
+        cur.execute("""
+            SELECT 
+                apo.id_apoderado, apo.rut as rut_apo, apo.nombres as nom_apo, 
+                apo.apellido_paterno as ape_p_apo, apo.apellido_materno as ape_m_apo, 
+                apo.fono, apo.email,
+                al.rut as rut_al, al.nombres as nom_al, al.apellido_paterno as ape_p_al, 
+                al.apellido_materno as ape_m_al, c.nivel, c.nombre_curso
+            FROM public.apoderados apo
+            LEFT JOIN public.alumnos al ON apo.id_apoderado = al.id_apoderado
+            LEFT JOIN public.cursos c ON al.id_curso = c.id_curso
+            ORDER BY apo.apellido_paterno ASC, al.nombres ASC
+        """)
+        resultados = cur.fetchall()
+
+        # Diccionario para agrupar a los alumnos bajo su apoderado
+        familias = {}
+        for row in resultados:
+            id_apo = row[0]
+            # Si el apoderado no está en el diccionario, lo creamos
+            if id_apo not in familias:
+                familias[id_apo] = {
+                    'rut': row[1], 
+                    'nombre_completo': f"{row[2]} {row[3]} {row[4]}",
+                    'fono': row[5], 
+                    'email': row[6],
+                    'alumnos': []
+                }
+            
+            # Si hay datos de un alumno asociado (row[7] es el RUT del alumno), lo añadimos a la lista
+            if row[7]: 
+                curso_str = f"{row[11]} {row[12]}" if row[11] else "Sin curso asignado"
+                familias[id_apo]['alumnos'].append({
+                    'rut': row[7],
+                    'nombre_completo': f"{row[8]} {row[9]} {row[10]}",
+                    'curso': curso_str
+                })
+
+    except Exception as e:
+        print(f"Error al cargar familias: {e}")
+        familias = {}
+    finally:
+        cur.close()
+        conn.close()
+
+    # Pasamos los valores del diccionario a la vista HTML
+    return render_template('ver_familias.html', familias=familias.values())
 
 # ==============================================================================
 # MÓDULO: VER DOCENTES

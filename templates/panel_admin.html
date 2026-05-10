@@ -40,9 +40,11 @@
             margin-right: 15px;
             font-size: 1.5rem;
         }
+        /* Colores para los íconos */
         .bg-teal { background-color: #e0f2f1; color: #00897b; }
         .bg-amber { background-color: #fff8e1; color: #ffa000; }
         .bg-indigo { background-color: #e8eaf6; color: #3f51b5; }
+        .bg-blue { background-color: #e3f2fd; color: #1976d2; } /* NUEVO COLOR PARA FAMILIAS */
     </style>
 </head>
 <body>
@@ -64,6 +66,7 @@
                 <li><a href="{{ url_for('admin_bp.lista_docentes') }}"><i class="fas fa-users me-2"></i> Ver Docentes</a></li>
                 
                 <li><a href="{{ url_for('admin_bp.nuevo_alumno') }}"><i class="fas fa-user-plus me-2"></i> Matricular Alumno</a></li>
+                <li><a href="{{ url_for('admin_bp.ver_familias') }}"><i class="fas fa-house-user me-2"></i> Ver Familias</a></li>
                 
                 <li class="nav-title">PLANIFICACIÓN ACADÉMICA</li>
                 <li><a href="{{ url_for('admin_bp.asignar_cursos') }}"><i class="fas fa-school me-2"></i> Asignar Cursos</a></li>
@@ -93,6 +96,7 @@
             
             <h4 class="section-title mb-3">Accesos Rápidos</h4>
             <div class="quick-access-grid mb-5">
+                
                 <a href="{{ url_for('admin_bp.nuevo_alumno') }}" class="action-card">
                     <div class="action-icon bg-teal">
                         <i class="fas fa-id-card"></i>
@@ -100,6 +104,16 @@
                     <div>
                         <strong>Nueva Matrícula</strong>
                         <p class="mb-0 small text-muted">Alumno + Apoderado</p>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('admin_bp.ver_familias') }}" class="action-card">
+                    <div class="action-icon bg-blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <strong>Directorio Familias</strong>
+                        <p class="mb-0 small text-muted">Gestión de apoderados</p>
                     </div>
                 </a>
 
@@ -122,6 +136,7 @@
                         <p class="mb-0 small text-muted">Asignar bloques y salas</p>
                     </div>
                 </a>
+                
             </div>
 
             <h4 class="section-title mb-3">Resumen del Sistema</h4>
