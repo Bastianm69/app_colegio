@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Horarios - AdminEscolar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_layout.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-size: inherit; background-color: #f4f7f6; }
+        .dashboard-container { display: flex; min-height: 100vh; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container w-100 d-flex">
+    
+    <aside class="sidebar" style="min-width: 250px; background-color: #2c3e50; color: white;">
+        <div class="sidebar-header p-3">
+            <h2>AdminEscolar</h2>
+            <p>Bienvenido, <strong>{{ session.get('nombre_usuario', 'Administrador') }}</strong></p>
+        </div>
+        <nav class="sidebar-nav p-3">
+            <ul class="list-unstyled">
+                <li class="mb-2"><a href="{{ url_for('admin_bp.admin_panel') }}" class="text-white text-decoration-none">Inicio</a></li>
+                <li class="nav-title mt-4 mb-2 text-muted fw-bold" style="font-size: 0.8rem;">GESTIÓN</li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.nuevo_docente') }}" class="text-white text-decoration-none">Añadir Docente</a></li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.lista_docentes') }}" class="text-white text-decoration-none">Ver Docentes</a></li>
+                
+                <li class="nav-title mt-4 mb-2 text-muted fw-bold" style="font-size: 0.8rem;">PLANIFICACIÓN ACADÉMICA</li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.asignar_cursos') }}" class="text-white text-decoration-none">Asignar Cursos (Jefaturas)</a></li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.asignar_materias') }}" class="text-white text-decoration-none">Asignar Materias</a></li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.gestionar_horarios') }}" class="text-warning text-decoration-none fw-bold">Gestionar Horarios</a></li>
+                
+                <li class="nav-title mt-4 mb-2 text-muted fw-bold" style="font-size: 0.8rem;">SISTEMA</li>
+                <li class="mb-2"><a href="{{ url_for('auth_bp.logout') }}" class="text-danger text-decoration-none fw-bold">Cerrar Sesión</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content flex-grow-1 p-4">
+        
+        <header class="top-header mb-4">
+            <h2 class="mb-0">Asignación Definitiva de Horarios</h2>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card shadow border-0 mb-4">
+            <div class="card-header bg-primary text-white p-3">
+                <h5 class="mb-0">1. Asignar Horario y Docente a la Malla</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('admin_bp.gestionar_horarios') }}" method="POST" class="row g-3">
+                    
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Materia de la Malla</label>
+                        <select name="id_malla" class="form-select" required>
+                            <option value="" disabled selected>Seleccione...</option>
+                            {% for m in mallas %}
+                            <option value="{{ m[0] }}">{{ m[1] }} - {{ m[2] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Día de la Semana</label>
+                        <select name="dia_semana" class="form-select" required>
+                            <option value="" disabled selected>Seleccione Día...</option>
+                            {% for dia in dias %}
+                            <option value="{{ dia }}">{{ dia }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Bloque de Tiempo</label>
+                        <select name="bloque_tiempo" class="form-select" required>
+                            <option value="" disabled selected>Seleccione Hora...</option>
+                            {% for bloque in bloques %}
+                            <option value="{{ bloque }}">{{ bloque }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Profesor</label>
+                        <select name="id_docente" class="form-select">
+                            <option value="" selected>Dejar Sin Asignar temporalmente...</option>
+                            {% for d in docentes %}
+                            <option value="{{ d[0] }}">{{ d[1] }} {{ d[2] }}</option>
+                            {% endfor %}
+                       </select>
+                    </div>
+
+                    <div class="col-12 text-end mt-3">
+                        <button type="submit" class="btn btn-success px-4">Guardar Horario Definitivo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow border-0">
+            <div class="card-header bg-dark text-white p-3">
+                <h5 class="mb-0">Horarios y Docentes Asignados (2026)</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Día</th>
+                            <th>Bloque</th>
+                            <th>Curso</th>
+                            <th>Asignatura</th>
+                            <th>Docente Titular</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for h in horarios %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">{{ h[1] }}</td>
+                            <td><span class="badge bg-secondary">{{ h[2] }}</span></td>
+                            <td>{{ h[3] }}</td>
+                            <td>{{ h[4] }}</td>
+                            <td>
+                                {% if h[5] %}
+                                    <span class="fw-bold text-success"><i class="fas fa-user-tie me-1"></i>{{ h[5] }} {{ h[6] }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Sin Profesor</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

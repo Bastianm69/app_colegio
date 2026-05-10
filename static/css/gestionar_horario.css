@@ -1,0 +1,89 @@
+/* static/gestionar_horarios.css */
+
+/* Fondo general y ajustes tipográficos */
+body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Tarjeta del Formulario */
+.form-card {
+    border-radius: 8px;
+    border-top: 4px solid #0dcaf0 !important; /* Acento color info de Bootstrap */
+}
+
+.form-select {
+    border-color: #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-select:focus {
+    border-color: #0dcaf0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+}
+
+/* --- ESTILOS DE LA TABLA DE CALENDARIO --- */
+
+.table-calendario {
+    table-layout: fixed; /* Asegura que todas las columnas de los días midan lo mismo */
+    width: 100%;
+}
+
+.table-calendario thead th {
+    background-color: #212529;
+    color: #ffffff;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 12px;
+    border-bottom: 2px solid #0dcaf0;
+}
+
+/* Columna de la izquierda (Módulos/Hora) */
+.col-bloque {
+    width: 15%; /* Más angosta que los días */
+}
+
+.celda-bloque {
+    background-color: #f8f9fa;
+    vertical-align: middle;
+    border-right: 2px solid #dee2e6;
+}
+
+/* Celdas de los Días */
+.celda-dia {
+    height: 80px; /* Altura mínima para que parezca calendario */
+    vertical-align: top;
+    padding: 8px !important;
+    background-color: #ffffff;
+    transition: background-color 0.2s;
+}
+
+/* Efecto hover sobre las celdas para ayudar visualmente al administrador */
+.celda-dia:hover {
+    background-color: #f1f8ff; /* Azul muy pálido */
+    cursor: crosshair;
+}
+
+/* Estilo para cuando inyectemos las clases dentro de las celdas (Uso futuro) */
+.clase-asignada {
+    background-color: #e0f2fe;
+    border-left: 4px solid #0ea5e9;
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.clase-asignada .materia {
+    font-weight: 700;
+    color: #0369a1;
+    display: block;
+}
+
+.clase-asignada .profe-curso {
+    color: #475569;
+    font-size: 0.75rem;
+}

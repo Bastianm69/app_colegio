@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrícula Pro - AdminEscolar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_layout.css') }}">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { min-height: 100vh; width: 260px; background: #2c3e50; color: white; position: fixed; }
+        .main-content { margin-left: 260px; padding: 40px; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { border-radius: 12px 12px 0 0 !important; font-weight: bold; padding: 15px 20px; }
+        label { font-weight: 600; color: #444; font-size: 0.9rem; margin-bottom: 5px; }
+        .form-control, .form-select { border-radius: 8px; padding: 10px; border: 1px solid #ced4da; }
+        .btn-primary { border-radius: 8px; padding: 12px 30px; font-weight: bold; background-color: #0d6efd; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container d-flex">
+    <aside class="sidebar">
+        <div class="p-4">
+            <h3 class="h4">AdminEscolar</h3>
+            <hr>
+        </div>
+        <nav class="px-3">
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2"><a href="{{ url_for('admin_bp.admin_panel') }}" class="nav-link text-white"><i class="fas fa-home me-2"></i> Inicio</a></li>
+                <li class="nav-item mb-2"><a href="{{ url_for('admin_bp.nuevo_alumno') }}" class="nav-link text-warning fw-bold"><i class="fas fa-user-plus me-2"></i> Matricular Alumno</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content flex-grow-1">
+        <header class="mb-4">
+            <h2 class="fw-bold">Proceso de Matrícula Completa</h2>
+            <p class="text-muted">Complete todos los módulos para registrar al estudiante en el año 2026.</p>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} shadow-sm">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('admin_bp.nuevo_alumno') }}" method="POST">
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <i class="fas fa-graduation-cap me-2"></i> 1. Información del Estudiante
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label>RUT Estudiante</label>
+                                    <input type="text" name="rut_al" class="form-control" placeholder="12.345.678-9" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label>Curso de Ingreso</label>
+                                    <select name="id_curso" class="form-select" required>
+                                        <option value="" disabled selected>Seleccione...</option>
+                                        {% for c in cursos %}<option value="{{ c[0] }}">{{ c[1] }} {{ c[2] }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Nombres Completos</label>
+                                <input type="text" name="nom_al" class="form-control" required>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label>Apellido Paterno</label>
+                                    <input type="text" name="ape_p_al" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label>Apellido Materno</label>
+                                    <input type="text" name="ape_m_al" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label>Fecha Nacimiento</label>
+                                    <input type="date" name="fec_nac" class="form-control" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Género</label>
+                                    <select name="genero" class="form-select">
+                                        <option value="Masculino">Masculino</option>
+                                        <option value="Femenino">Femenino</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Nacionalidad</label>
+                                    <input type="text" name="nacionalidad" class="form-control" value="Chilena">
+                                </div>
+                            </div>
+                            <div class="form-check mt-3">
+                                <input class="form-check-input" type="checkbox" name="vive_con" id="vive_con" checked>
+                                <label class="form-check-label" for="vive_con">El estudiante vive con el apoderado</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <i class="fas fa-map-marked-alt me-2"></i> 2. Domicilio de Residencia
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <label>Dirección (Calle, número, depto)</label>
+                                <input type="text" name="calle" class="form-control" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><label>Comuna</label><input type="text" name="comuna" class="form-control" required></div>
+                                <div class="col-md-6"><label>Región</label><input type="text" name="region" class="form-control" required></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <i class="fas fa-user-shield me-2"></i> 3. Datos del Apoderado
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3"><label>RUT Apoderado</label><input type="text" name="rut_apo" class="form-control" required></div>
+                            <div class="mb-3"><label>Nombres</label><input type="text" name="nom_apo" class="form-control" required></div>
+                            <div class="row mb-3">
+                                <div class="col-6"><label>Ap. Paterno</label><input type="text" name="ape_p_apo" class="form-control" required></div>
+                                <div class="col-6"><label>Ap. Materno</label><input type="text" name="ape_m_apo" class="form-control" required></div>
+                            </div>
+                            <div class="mb-3"><label>Teléfono Movil</label><input type="text" name="fono_apo" class="form-control" placeholder="+569..." required></div>
+                            <div class="mb-3"><label>Email</label><input type="email" name="email_apo" class="form-control" required></div>
+                        </div>
+                    </div>
+
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <i class="fas fa-phone-alt me-2"></i> 4. Contacto de Emergencia
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3"><label>Nombre Completo</label><input type="text" name="nom_em" class="form-control" required></div>
+                            <div class="row mb-3">
+                                <div class="col-6"><label>Ap. Paterno</label><input type="text" name="ape_p_em" class="form-control"></div>
+                                <div class="col-6"><label>Ap. Materno</label><input type="text" name="ape_m_em" class="form-control"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6"><label>Teléfono</label><input type="text" name="fono_em" class="form-control" required></div>
+                                <div class="col-6"><label>Parentesco</label><input type="text" name="paren_em" class="form-control" placeholder="Ej: Tío"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-3">
+                <a href="{{ url_for('admin_bp.admin_panel') }}" class="btn btn-outline-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">Finalizar Matrícula</button>
+            </div>
+        </form>
+    </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Especialidades - {{ docente[0] }} {{ docente[1] }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light p-4">
+    <div class="container" style="max-width: 700px;">
+        <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Materias de: {{ docente[0] }} {{ docente[1] }}</h5>
+                <a href="{{ url_for('admin_bp.lista_docentes') }}" class="btn btn-sm btn-light">Volver</a>
+            </div>
+            <div class="card-body">
+                
+                <form action="" method="POST" class="row g-2 mb-4">
+                    <input type="hidden" name="accion" value="agregar">
+                    <div class="col-9">
+                        <select name="id_asignatura" class="form-select" required>
+                            <option value="" disabled selected>Habilitar nueva asignatura...</option>
+                            {% for m in materias %}
+                            <option value="{{ m[0] }}">{{ m[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-3">
+                        <button type="submit" class="btn btn-success w-100">Añadir</button>
+                    </div>
+                </form>
+
+                <hr>
+
+                <h6>Materias Habilitadas:</h6>
+                <ul class="list-group">
+                    {% for e in especialidades %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ e[1] }}
+                        <form action="" method="POST" class="m-0">
+                            <input type="hidden" name="accion" value="eliminar">
+                            <input type="hidden" name="id_reg" value="{{ e[0] }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger border-0">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <p class="text-muted small">Este docente aún no tiene materias asignadas.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

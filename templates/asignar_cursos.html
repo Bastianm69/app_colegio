@@ -3,109 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asignar Cursos - Admin</title>
-    
-    <!-- Bootstrap 5 CSS para que se vea profesional -->
+    <title>Gestión de Jefaturas - AdminEscolar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_layout.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- FontAwesome para los iconos (Lo restauré por si acaso) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- CSS Personalizado usando la ruta dinámica de Flask -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='asignar_cursos.css') }}">
+    <style>
+        /* Ajuste para que Bootstrap no rompa tu layout principal */
+        body { font-size: inherit; background-color: #f4f7f6; }
+        .dashboard-container { display: flex; min-height: 100vh; }
+        /* Puedes ajustar esto según tu panel_layout.css */
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <!-- Barra de navegación simple -->
-    <nav class="navbar navbar-dark bg-dark mb-4 shadow">
-        <div class="container">
-            <span class="navbar-brand mb-0 h1">
-                <i class="fas fa-school"></i> Panel de Administración
-            </span>
-            <!-- Botón para volver a tu panel admin -->
-            <a href="{{ url_for('admin_bp.admin_panel') }}" class="btn btn-outline-light btn-sm">
-                Volver al Panel
-            </a>
+<div class="dashboard-container w-100 d-flex">
+    
+    <aside class="sidebar" style="min-width: 250px; background-color: #2c3e50; color: white;">
+        <div class="sidebar-header p-3">
+            <h2>AdminEscolar</h2>
+            <p>Bienvenido, <strong>{{ session.get('nombre_usuario', 'Administrador') }}</strong></p>
         </div>
-    </nav>
-
-    <!-- Contenido principal -->
-    <div class="container">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center pt-3 pb-3">
-                <h4 class="mb-0"><i class="fas fa-users-cog"></i> Gestión de Profesores Jefes</h4>
-            </div>
-            
-            <div class="card-body">
+        
+        <nav class="sidebar-nav p-3">
+            <ul class="list-unstyled">
+                <li class="mb-2"><a href="{{ url_for('admin_bp.admin_panel') }}" class="text-white text-decoration-none">Inicio</a></li>
                 
-                <!-- Mensajes de éxito o error cuando Flask asigna al profe -->
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
+                <li class="nav-title mt-4 mb-2 text-muted fw-bold" style="font-size: 0.8rem;">GESTIÓN</li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.nuevo_docente') }}" class="text-white text-decoration-none">Añadir Docente</a></li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.lista_docentes') }}" class="text-white text-decoration-none">Ver Docentes</a></li>
+                
+                <li class="nav-title mt-4 mb-2 text-muted fw-bold" style="font-size: 0.8rem;">PLANIFICACIÓN ACADÉMICA</li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.asignar_cursos') }}" class="text-warning text-decoration-none fw-bold">Asignar Cursos (Jefaturas)</a></li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.asignar_clases') }}" class="text-white text-decoration-none">Asignar Materias</a></li>
+                <li class="mb-2"><a href="{{ url_for('admin_bp.gestionar_horarios') }}" class="text-white text-decoration-none">Gestionar Horarios</a></li>
+                
+                <li class="nav-title mt-4 mb-2 text-muted fw-bold" style="font-size: 0.8rem;">SISTEMA</li>
+                <li class="mb-2"><a href="{{ url_for('auth_bp.logout') }}" class="text-danger text-decoration-none fw-bold">Cerrar Sesión</a></li>
+            </ul>
+        </nav>
+    </aside>
 
-                <!-- Tabla donde listamos los cursos -->
-                <div class="table-responsive mt-3">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nivel</th>
-                                <th>Curso</th>
-                                <th>Profesor Jefe Actual</th>
-                                <th class="text-center">Asignar Nueva Jefatura</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Flask inyecta la lista de cursos aquí -->
-                            {% for curso in cursos %}
-                            <tr>
-                                <td><strong>{{ curso[2] }}</strong></td>
-                                <td>{{ curso[1] }}</td>
-                                
-                                <td>
-                                    {% if curso[3] %}
-                                        <span class="badge bg-success">
-                                            {{ curso[3] }} {{ curso[4] }}
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">Sin Asignar</span>
-                                    {% endif %}
-                                </td>
-                                
-                                <td class="text-center">
-                                    <!-- Formulario para enviar los datos al Python -->
-                                    <form action="{{ url_for('admin_bp.asignar_jefe') }}" method="POST" class="d-flex justify-content-center gap-2">
-                                        <!-- ID del curso oculto -->
-                                        <input type="hidden" name="id_curso" value="{{ curso[0] }}">
+    <main class="main-content flex-grow-1 p-4">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card shadow border-0 mt-3">
+            <div class="card-header bg-primary text-white p-3">
+                <h4 class="mb-0">Gestión de Profesores Jefes</h4>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Nivel</th>
+                            <th>Curso</th>
+                            <th>Profesor Jefe Actual</th>
+                            <th class="text-center">Asignar Nueva Jefatura</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in cursos %}
+                        <tr>
+                            <td class="ps-4 fw-bold">{{ c[1] }}</td>
+                            <td>{{ c[2] }}</td>
+                            <td>
+                                {% if c[3] %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success p-2 fs-6">{{ c[3] }} {{ c[4] }}</span>
                                         
-                                        <!-- Selector de docentes -->
-                                        <select name="id_docente" class="form-select form-select-sm w-auto" required>
-                                            <option value="" disabled selected>Seleccione Docente...</option>
-                                            {% for docente in docentes %}
-                                                <option value="{{ docente[0] }}">{{ docente[2] }}, {{ docente[1] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        
-                                        <!-- Botón de confirmar -->
-                                        <button type="submit" class="btn btn-primary btn-sm">Asignar</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                        <form action="{{ url_for('admin_bp.asignar_cursos') }}" method="POST" class="ms-2 mb-0">
+                                            <input type="hidden" name="id_curso" value="{{ c[0] }}">
+                                            <input type="hidden" name="accion" value="eliminar">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2 fs-5" title="Quitar Jefe">×</button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark p-2 fs-6">Sin Asignar</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="{{ url_for('admin_bp.asignar_cursos') }}" method="POST" class="d-flex gap-2 justify-content-center px-3 mb-0">
+                                    <input type="hidden" name="id_curso" value="{{ c[0] }}">
+                                    <input type="hidden" name="accion" value="asignar">
+                                    <select name="id_docente" class="form-select form-select-sm" required>
+                                        <option value="" disabled selected>Seleccione Docente...</option>
+                                        {% for d in docentes %}
+                                        <option value="{{ d[0] }}">{{ d[1] }} {{ d[2] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary px-3">Asignar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
 
-    <!-- Bootstrap JS para que funcionen las alertas -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

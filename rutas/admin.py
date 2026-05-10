@@ -4,6 +4,7 @@ from validaciones import validar_rut
 from db_registrar_docente import registrar_docente_db
 from db_registrar_docente import obtener_todos_los_docentes, dar_de_baja_docente_db
 from db_registrar_docente import obtener_docente_por_rut, actualizar_docente_db
+import logging
 
 
 # 1. Definición del Blueprint
@@ -78,6 +79,54 @@ def nuevo_docente():
     return render_template('nuevo_docente.html', datos=datos)
 
 # ==============================================================================
+# MÓDULO: REGISTRAR NUEVO ALUMNO CON EL APODERADO 
+# ==============================================================================
+
+@admin_bp.route('/nuevo-alumno', methods=['GET', 'POST'])
+def nuevo_alumno():
+    # ... validación de sesión ...
+    conn = obtener_conexion()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        d = request.form
+        # Capturamos el checkbox (viene como 'on' si está marcado)
+        vive_con = True if d.get('vive_con') == 'on' else False
+        
+        try:
+            cur.execute("""
+                CALL sp_matricular_alumno_completo(
+                    %s, %s, %s, %s, %s, %s, %s, %s::INT, %s,
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s, %s, %s, %s
+                )""", (
+                    # Alumno
+                    d.get('rut_al'), d.get('nom_al'), d.get('ape_p_al'), d.get('ape_m_al'),
+                    d.get('fec_nac'), d.get('genero'), d.get('nacionalidad'), d.get('id_curso'), vive_con,
+                    # Apoderado
+                    d.get('rut_apo'), d.get('nom_apo'), d.get('ape_p_apo'), d.get('ape_m_apo'),
+                    d.get('fono_apo'), d.get('email_apo'),
+                    # Dirección
+                    d.get('calle'), d.get('comuna'), d.get('region'),
+                    # Emergencia
+                    d.get('nom_em'), d.get('ape_p_em'), d.get('ape_m_em'), d.get('fono_em'), d.get('paren_em')
+                ))
+            conn.commit()
+            flash("Matrícula procesada correctamente. El alumno ya tiene acceso al sistema.", "success")
+            return redirect(url_for('admin_bp.admin_panel'))
+        except Exception as e:
+            conn.rollback()
+            flash(f"Error en la matrícula: {e}", "danger")
+            
+    # Carga de cursos para el select
+    cur.execute("SELECT id_curso, nivel, nombre_curso FROM cursos WHERE anio_academico = 2026")
+    cursos = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('nuevo_alumno.html', cursos=cursos)
+
+# ==============================================================================
 # MÓDULO: VER DOCENTES
 # ==============================================================================
 
@@ -143,7 +192,7 @@ def editar_docente(rut):
     return render_template('editar_docente.html', d=docente)
 
 # ==============================================================================
-# MÓDULO: ASIGNAR CURSO (Preparado para el próximo SP)
+# MÓDULO: ASIGNAR CURSO 
 # ==============================================================================
 @admin_bp.route('/asignar-cursos')
 def asignar_cursos_vista():
@@ -255,4 +304,193 @@ def asignar_clases():
 
 
 
+# ==============================================================================
+# MÓDULO: ASIGNAR HORARIO 
+# ==============================================================================
+
+@admin_bp.route('/gestionar-horarios', methods=['GET', 'POST'])
+def gestionar_horarios():
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'ADMIN' not in roles_usuario:
+        return redirect(url_for('auth_bp.login'))
+
+    conn = obtener_conexion()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        id_malla = request.form.get('id_malla')
+        dia_semana = request.form.get('dia_semana')
+        bloque_tiempo = request.form.get('bloque_tiempo')
+        id_docente = request.form.get('id_docente')
+        if not id_docente: 
+            id_docente = None  # Permitir asignar sin docente para marcar el horario como "ocupado" pero sin profesor asignado
+
+        try:
+            # Insertamos en la nueva tabla sencilla
+            cur.execute("""
+                INSERT INTO public.horario_maestro (id_malla, dia_semana, bloque_tiempo, id_docente) 
+                VALUES (%s, %s, %s, %s)
+            """, (id_malla, dia_semana, bloque_tiempo, id_docente))
+            conn.commit()
+            flash("Horario y profesor asignados con éxito.", "success")
+        except Exception as e:
+            conn.rollback()
+            flash(f"Error al asignar horario: {e}", "error")
+        return redirect(url_for('admin_bp.gestionar_horarios'))
+
+    # Carga de datos para la vista GET
+    try:
+        # 1. Traer la Malla (los huecos a llenar)
+        cur.execute("""
+            SELECT m.id_malla, c.nombre_curso, a.nombre_asignatura 
+            FROM public.malla_anual m
+            JOIN public.cursos c ON m.id_curso = c.id_curso
+            JOIN public.asignaturas a ON m.id_asignatura = a.id_asignatura
+            WHERE m.anio_escolar = 2026
+        """)
+        mallas = cur.fetchall()
+
+        # 2. Traer docentes para el selector
+        cur.execute("SELECT id_docente, nombres, apellido_paterno FROM public.docentes WHERE activo = true")
+        docentes = cur.fetchall()
+
+        # 3. Traer los Horarios Maestros ya guardados para la tabla
+        cur.execute("""
+            SELECT hm.id_horario, hm.dia_semana, hm.bloque_tiempo, c.nombre_curso, a.nombre_asignatura, d.nombres, d.apellido_paterno
+            FROM public.horario_maestro hm
+            JOIN public.malla_anual m ON hm.id_malla = m.id_malla
+            JOIN public.cursos c ON m.id_curso = c.id_curso
+            JOIN public.asignaturas a ON m.id_asignatura = a.id_asignatura
+            LEFT JOIN public.docentes d ON hm.id_docente = d.id_docente
+            ORDER BY hm.dia_semana, hm.bloque_tiempo
+        """)
+        horarios_guardados = cur.fetchall()
+
+        # Definimos bloques y días fijos estándar para simplificar el frontend
+        bloques_fijos = ["08:00 - 09:30", "09:45 - 11:15", "11:30 - 13:00", "14:00 - 15:30", "15:45 - 17:15"]
+        dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
+
+    except Exception as e:
+        flash(f"Error cargando datos: {e}", "error")
+        mallas, docentes, horarios_guardados, bloques_fijos, dias_semana = [], [], [], [], []
+    finally:
+        cur.close()
+        conn.close()
+
+    return render_template('gestionar_horarios.html', 
+                           mallas=mallas, docentes=docentes, 
+                           horarios=horarios_guardados,
+                           bloques=bloques_fijos, dias=dias_semana)
+
+
+@admin_bp.route('/asignar-cursos', methods=['GET', 'POST'])
+def asignar_cursos():
+    if 'user_id' not in session:
+        return redirect(url_for('auth_bp.login'))
+
+    conn = obtener_conexion()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        accion = request.form.get('accion')
+        id_curso = request.form.get('id_curso')
+
+        try:
+            if accion == 'asignar':
+                id_docente = request.form.get('id_docente')
+                cur.execute("SELECT public.sp_asignar_profesor_jefe(%s, %s)", (id_curso, id_docente))
+            elif accion == 'eliminar':
+                cur.execute("SELECT public.sp_quitar_profesor_jefe(%s)", (id_curso,))
+            
+            conn.commit()
+            flash("Operación realizada con éxito", "success")
+        except Exception as e:
+            conn.rollback()
+            flash(f"Error en la base de datos: {e}", "error")
+        
+        return redirect(url_for('admin_bp.asignar_cursos'))
+
+    try:
+        cur.execute("SELECT * FROM public.sp_obtener_cursos_jefaturas(%s)", (2026,))
+        cursos = cur.fetchall()
+
+        cur.execute("SELECT * FROM public.sp_listar_docentes_activos()")
+        docentes = cur.fetchall()
+    except Exception as e:
+        flash(f"Error al cargar datos: {e}", "error")
+        cursos, docentes = [], []
+    finally:
+        cur.close()
+        conn.close()
+    
+    return render_template('asignar_cursos.html', cursos=cursos, docentes=docentes)
+
+
+@admin_bp.route('/asignar-materias', methods=['GET', 'POST'])
+def asignar_materias():
+    if 'user_id' not in session:
+        return redirect(url_for('auth_bp.login'))
+
+    conn = obtener_conexion()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        # Capturamos la acción (por defecto será 'agregar')
+        accion = request.form.get('accion', 'agregar')
+
+        if accion == 'agregar':
+            id_curso = request.form.get('id_curso')
+            id_asignatura = request.form.get('id_asignatura')
+            horas = request.form.get('horas_semanales') 
+            try:
+                cur.execute("SELECT public.sp_crear_materia_malla(%s::INT, %s::INT, %s::INT, %s::INT)", 
+                            (id_curso, id_asignatura, horas, 2026))
+                conn.commit()
+                flash("Materia agregada a la malla exitosamente.", "success")
+            except Exception as e:
+                conn.rollback()
+                flash(f"Error al agregar materia: {e}", "error")
+
+        elif accion == 'eliminar':
+            id_malla = request.form.get('id_malla')
+            try:
+                cur.execute("SELECT public.sp_eliminar_materia_malla(%s::INT)", (id_malla,))
+                conn.commit()
+                flash("Materia eliminada del curso correctamente.", "success")
+            except Exception as e:
+                conn.rollback()
+                flash(f"Error al eliminar materia: {e}", "error")
+        
+        return redirect(url_for('admin_bp.asignar_materias'))
+
+    try:
+        cur.execute("SELECT id_curso, nivel, nombre_curso FROM public.cursos WHERE anio_academico = 2026 ORDER BY nivel, nombre_curso")
+        cursos = cur.fetchall()
+
+        cur.execute("SELECT id_asignatura, nombre_asignatura FROM public.asignaturas ORDER BY nombre_asignatura")
+        asignaturas = cur.fetchall()
+
+        cur.execute("SELECT * FROM public.sp_obtener_malla_curso(2026)")
+        malla_plana = cur.fetchall()
+        
+        malla_agrupada = {}
+        for m in malla_plana:
+            nombre_curso = f"{m[1]} {m[2]}" 
+            if nombre_curso not in malla_agrupada:
+                malla_agrupada[nombre_curso] = []
+                
+            malla_agrupada[nombre_curso].append({
+                'id_malla': m[0],  # ¡NUEVO! Guardamos el ID para poder borrar
+                'asignatura': m[3],
+                'horas': m[4] if len(m) > 4 else 0
+            })
+
+    except Exception as e:
+        flash(f"Error cargando datos: {e}", "error")
+        cursos, asignaturas, malla_agrupada = [], [], {}
+    finally:
+        cur.close()
+        conn.close()
+
+    return render_template('asignar_materias.html', cursos=cursos, asignaturas=asignaturas, malla_agrupada=malla_agrupada)
 
