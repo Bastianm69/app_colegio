@@ -4,8 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión AIEP - Editar Docente</title>
-    <!-- Referencia al archivo CSS externo -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_docentes.css') }}">
+    <style>
+        /* Estilos específicos para la rejilla de materias */
+        .materias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .materia-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        .materia-item input {
+            width: auto !important;
+            margin: 0 !important;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
@@ -17,101 +41,121 @@
 
     <form method="POST">
         <div class="grid-form">
-            <!-- SECCIÓN 1: IDENTIDAD -->
             <div class="form-section-title">Identidad y Acceso</div>
             
             <div class="form-group">
                 <label>RUT (Identificador Único)</label>
-                <input type="text" name="rut" value="{{ d[0] }}" readonly>
+                <input type="text" name="rut" value="{{ d.rut }}" readonly>
             </div>
             
             <div class="form-group">
                 <label>Correo Electrónico Institucional</label>
-                <input type="email" name="email" value="{{ d[6] }}" required>
+                <input type="email" name="email" value="{{ d.email }}" required>
             </div>
 
-            <!-- SECCIÓN 2: DATOS PERSONALES -->
+            <div class="form-group">
+                <label>Nombre de Usuario</label>
+                <input type="text" name="usuario" value="{{ d.nombre_usuario }}" required>
+            </div>
+
             <div class="form-section-title">Información Personal</div>
             
             <div class="form-group">
                 <label>Nombres</label>
-                <input type="text" name="nombres" value="{{ d[1] }}" required>
+                <input type="text" name="nombres" value="{{ d.nombres }}" required>
             </div>
             
             <div class="form-group">
                 <label>Apellido Paterno</label>
-                <input type="text" name="apellido_paterno" value="{{ d[2] }}" required>
+                <input type="text" name="apellido_paterno" value="{{ d.apellido_paterno }}" required>
             </div>
 
             <div class="form-group">
                 <label>Apellido Materno</label>
-                <input type="text" name="apellido_materno" value="{{ d[3] }}">
+                <input type="text" name="apellido_materno" value="{{ d.apellido_materno }}">
             </div>
 
             <div class="form-group">
-                <label>Especialidad / Nivel Académico</label>
-                <input type="text" name="especialidad_nivel" value="{{ d[4] }}" required>
+                <label>Especialidad Principal</label>
+                <input type="text" name="especialidad_nivel" value="{{ d.especialidad_nivel }}" required>
             </div>
 
             <div class="form-group">
                 <label>Teléfono de Contacto</label>
-                <input type="text" name="fono" value="{{ d[5] }}">
+                <input type="text" name="fono" value="{{ d.fono }}">
             </div>
 
-            <!-- SECCIÓN 3: DIRECCIÓN -->
+            <div class="form-section-title full-width">Competencias Académicas (Asignaturas)</div>
+            
+            <div class="form-group full-width">
+                <label>Seleccione las materias que el docente puede impartir:</label>
+                <div class="materias-grid">
+                    {% if todas_materias %}
+                        {% for asig in todas_materias %}
+                        <div class="materia-item">
+                            <input type="checkbox" name="asignaturas_habilitadas" value="{{ asig.id_asignatura }}" id="asig_{{ asig.id_asignatura }}"
+                                {% if asig.id_asignatura in materias_actuales %} checked {% endif %}>
+                            <label for="asig_{{ asig.id_asignatura }}">{{ asig.nombre_asignatura }}</label>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No hay asignaturas registradas.</p>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="form-section-title">Residencia</div>
             
             <div class="form-group">
                 <label>Calle y Número</label>
-                <input type="text" name="calle_numero" value="{{ d[7] }}">
+                <input type="text" name="calle_numero" value="{{ d.calle_numero }}">
             </div>
 
             <div class="form-group">
                 <label>Comuna</label>
-                <input type="text" name="comuna" value="{{ d[8] }}">
+                <input type="text" name="comuna" value="{{ d.comuna }}">
             </div>
 
             <div class="form-group">
                 <label>Región</label>
-                <input type="text" name="region" value="{{ d[9] }}">
+                <input type="text" name="region" value="{{ d.region }}">
             </div>
 
             <div class="form-group">
                 <label>Código Postal</label>
-                <input type="text" name="codigo_postal" value="{{ d[10] }}">
+                <input type="text" name="codigo_postal" value="{{ d.codigo_postal }}">
             </div>
 
             <div class="form-group full-width">
                 <label>Detalles Adicionales (Block, Depto, Villa)</label>
-                <textarea name="detalles" rows="2">{{ d[11] }}</textarea>
+                <textarea name="detalles" rows="2">{{ d.detalles_direccion }}</textarea>
             </div>
 
-            <!-- SECCIÓN 4: SALUD -->
             <div class="form-section-title">Ficha Médica de Emergencia</div>
             
             <div class="form-group">
                 <label>Grupo Sanguíneo</label>
-                <input type="text" name="grupo_sangre" value="{{ d[12] }}">
+                <input type="text" name="grupo_sangre" value="{{ d.grupo_sangre }}">
             </div>
 
             <div class="form-group">
                 <label>Discapacidad</label>
-                <input type="text" name="discapacidad" value="{{ d[13] }}">
+                <input type="text" name="discapacidad" value="{{ d.discapacidad }}">
             </div>
 
             <div class="form-group full-width">
                 <label>Alergias Conocidas</label>
-                <textarea name="alergias" rows="2">{{ d[14] }}</textarea>
+                <textarea name="alergias" rows="2">{{ d.alergias }}</textarea>
             </div>
 
             <div class="form-group full-width">
                 <label>Enfermedades Crónicas</label>
-                <textarea name="enfermedades_cronicas" rows="2">{{ d[15] }}</textarea>
+                <textarea name="enfermedades_cronicas" rows="2">{{ d.enfermedades_cronicas }}</textarea>
             </div>
 
             <div class="form-group full-width">
                 <label>Medicamentos en Uso</label>
-                <textarea name="medicamentos" rows="2">{{ d[16] }}</textarea>
+                <textarea name="medicamentos" rows="2">{{ d.medicamentos }}</textarea>
             </div>
         </div>
 

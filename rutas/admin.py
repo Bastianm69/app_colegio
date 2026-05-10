@@ -4,6 +4,7 @@ from validaciones import validar_rut
 from db_registrar_docente import registrar_docente_db
 from db_registrar_docente import obtener_todos_los_docentes, dar_de_baja_docente_db
 from db_registrar_docente import obtener_docente_por_rut, actualizar_docente_db
+from psycopg2.extras import RealDictCursor
 
 import logging
 
@@ -35,49 +36,65 @@ def nuevo_docente():
         return redirect(url_for('auth_bp.login'))
 
     datos = {}
+    asignaturas = [] # Lista para los checkboxes
+
+    # Conexión inicial para obtener datos necesarios en el formulario (GET y POST)
+    conn = obtener_conexion()
+    if not conn:
+        flash("Error técnico: No se pudo establecer conexión.", "error")
+        return redirect(url_for('admin_bp.admin_panel'))
+
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        # Traemos las asignaturas para mostrarlas siempre en el formulario
+        cur.execute("SELECT id_asignatura, nombre_asignatura FROM public.asignaturas ORDER BY nombre_asignatura ASC")
+        asignaturas = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"LOG ERROR: No se pudieron cargar las asignaturas: {e}")
 
     if request.method == 'POST':
         print("\n" + ">>>" * 10)
         print("LOG: Inicio de solicitud POST en /nuevo-docente")
         
-        # 1. Ver qué datos llegan del HTML
+        # 1. Capturamos datos normales y la LISTA de IDs de asignaturas seleccionadas
         datos = dict(request.form)
+        asignaturas_seleccionadas = request.form.getlist('asignaturas_habilitadas')
+        
         print(f"LOG: Datos capturados: {datos}")
+        print(f"LOG: Asignaturas marcadas: {asignaturas_seleccionadas}")
         
         # Validación del RUT
         rut_valido = validar_rut(datos.get('rut'))
         if not rut_valido:
             print(f"LOG: RUT inválido abortando: {datos.get('rut')}")
             flash("Error: El RUT ingresado no tiene un formato válido.", "error")
-            return render_template('nuevo_docente.html', datos=datos)
+            return render_template('nuevo_docente.html', datos=datos, asignaturas=asignaturas)
 
-        # Intento de conexión y registro
-        conn = obtener_conexion()
-        if conn:
-            try:
-                # 2. Llamada a la lógica de base de datos
-                print("LOG: Llamando a registrar_docente_db...")
-                exito, mensaje = registrar_docente_db(datos, conn)
-                
-                print(f"LOG: Resultado DB: exito={exito}, mensaje={mensaje}")
-                
-                if exito:
-                    flash(mensaje, "success")
-                    return redirect(url_for('admin_bp.admin_panel'))
-                else:
-                    flash(mensaje, "error")
-            except Exception as e:
-                print(f"LOG: ERROR CRÍTICO: {str(e)}")
-                flash(f"Error inesperado: {e}", "error")
-            finally:
-                conn.close()
-                print("LOG: Conexión cerrada.")
-        else:
-            flash("Error técnico: No se pudo establecer conexión.", "error")
+        try:
+            # 2. Llamada a la lógica de base de datos (le pasamos la lista de materias)
+            print("LOG: Llamando a registrar_docente_db...")
+            
+            # Nota: Debes actualizar registrar_docente_db para que acepte 'asignaturas_seleccionadas'
+            exito, mensaje = registrar_docente_db(datos, conn, asignaturas_seleccionadas)
+            
+            print(f"LOG: Resultado DB: exito={exito}, mensaje={mensaje}")
+            
+            if exito:
+                flash(mensaje, "success")
+                return redirect(url_for('admin_bp.admin_panel'))
+            else:
+                flash(mensaje, "error")
+        except Exception as e:
+            print(f"LOG: ERROR CRÍTICO: {str(e)}")
+            flash(f"Error inesperado: {e}", "error")
+        finally:
+            conn.close()
+            print("LOG: Conexión cerrada.")
         
         print("<<<" * 10 + "\n")
 
-    return render_template('nuevo_docente.html', datos=datos)
+    return render_template('nuevo_docente.html', datos=datos, asignaturas=asignaturas)
 
 # ==============================================================================
 # MÓDULO: REGISTRAR NUEVO ALUMNO CON EL APODERADO 
@@ -280,14 +297,23 @@ def eliminar_docente(rut):
     # Después de cambiar el estado, volvemos a la lista para ver el cambio
     return redirect(url_for('admin_bp.lista_docentes'))
 
+from psycopg2.extras import RealDictCursor # IMPORTANTE: Asegúrate de tener esto arriba
+
 @admin_bp.route('/editar-docente/<rut>', methods=['GET', 'POST'])
 def editar_docente(rut):
     conn = obtener_conexion()
     
+    # Configuramos el cursor como RealDictCursor para acceder por nombre de columna
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
     if request.method == 'POST':
-        # Captura de datos desde el HTML
+        # 1. Capturamos la lista de IDs de las materias (vienen de los checkboxes)
+        materias_seleccionadas = request.form.getlist('asignaturas_habilitadas')
+        
+        # 2. Captura de datos desde el HTML
         datos_form = {
             'rut': rut,
+            'nombre_usuario': request.form.get('usuario'),
             'email': request.form.get('email'),
             'nombres': request.form.get('nombres'),
             'apellido_paterno': request.form.get('apellido_paterno'),
@@ -303,22 +329,53 @@ def editar_docente(rut):
             'discapacidad': request.form.get('discapacidad'),
             'alergias': request.form.get('alergias'),
             'enfermedades_cronicas': request.form.get('enfermedades_cronicas'),
-            'medicamentos': request.form.get('medicamentos')
+            'medicamentos': request.form.get('medicamentos'),
+            'materias': materias_seleccionadas 
         }
         
+        # Llamamos a la función que ejecuta el SP
         exito, msj = actualizar_docente_db(datos_form, conn)
-        conn.close()
         
         if exito:
-            # Redirige a la tabla para ver los cambios
+            conn.close()
+            flash("Perfil actualizado exitosamente", "success")
             return redirect(url_for('admin_bp.lista_docentes'))
         else:
-            return f"Error: {msj}"
+            flash(f"Error al actualizar: {msj}", "error")
 
-    # Lógica para mostrar el formulario (GET)
-    docente = obtener_docente_por_rut(conn, rut)
+    # --- Lógica para mostrar el formulario (GET) ---
+    
+    # 1. Obtenemos los datos actuales (Ahora 'docente' será un diccionario)
+    # IMPORTANTE: Asegúrate de que obtener_docente_por_rut use el mismo cursor_factory si es posible,
+    # o simplemente haz la consulta aquí directamente para asegurar compatibilidad.
+    cur.execute("SELECT * FROM v_detalle_docentes WHERE rut = %s", (rut,))
+    docente = cur.fetchone()
+    
+    if not docente:
+        cur.close()
+        conn.close()
+        flash("Docente no encontrado", "error")
+        return redirect(url_for('admin_bp.lista_docentes'))
+
+    # 2. Obtenemos TODAS las asignaturas existentes
+    cur.execute("SELECT id_asignatura, nombre_asignatura FROM public.asignaturas ORDER BY nombre_asignatura ASC")
+    todas_materias = cur.fetchall()
+    
+    # 3. Obtenemos solo los IDs de las materias que ya tiene este docente
+    # Al ser RealDictCursor, ahora docente['id_docente'] SI funciona
+    id_docente = docente['id_docente'] 
+    cur.execute("SELECT id_asignatura FROM public.docente_materias WHERE id_docente = %s", (id_docente,))
+    
+    # Como el cursor es Dict, row es un diccionario {'id_asignatura': valor}
+    materias_actuales = [row['id_asignatura'] for row in cur.fetchall()]
+    
+    cur.close()
     conn.close()
-    return render_template('editar_docente.html', d=docente)
+    
+    return render_template('editar_docente.html', 
+                           d=docente, 
+                           todas_materias=todas_materias, 
+                           materias_actuales=materias_actuales)
 
 # ==============================================================================
 # MÓDULO: ASIGNAR CURSO 

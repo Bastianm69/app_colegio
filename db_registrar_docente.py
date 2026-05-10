@@ -1,12 +1,12 @@
 from flask import session  
 from werkzeug.security import generate_password_hash
 
-def registrar_docente_db(datos, conn):
+def registrar_docente_db(datos, conn, asignaturas_seleccionadas):
     try:
         cur = conn.cursor()
-        print("   [DB_LOG]: Preparando parámetros para el SP...")
+        print("   [DB_LOG]: Preparando parámetros para el SP (incluyendo materias)...")
         
-        # Sacamos el ID del administrador que está logueado desde la sesión de Flask
+        # 1. Sacamos el ID del administrador
         admin_id = session.get('user_id') 
 
         # 2. VALIDACIÓN DE SEGURIDAD
@@ -14,38 +14,44 @@ def registrar_docente_db(datos, conn):
             print("   [DB_LOG]: ❌ ERROR: No hay un administrador en sesión.")
             return False, "Error de sesión: Debe estar logueado como administrador."
 
+        # Generar hash de la contraseña
         hash_pass = generate_password_hash(datos.get('password'))
+
+        # 3. CONVERSIÓN DE ASIGNATURAS A ARRAY DE ENTEROS
+        # Esto es lo que permite que el FOREACH en el SP funcione
+        materias_array = [int(id_asig) for id_asig in asignaturas_seleccionadas] if asignaturas_seleccionadas else []
         
-        # 3. PARÁMETROS (Ahora admin_id sí existe y Python lo reconoce)
+        # 4. PARÁMETROS ACTUALIZADOS (22 en total)
         params = (
-            admin_id,                        # 1. p_admin_id (Quién crea)
-            datos.get('usuario'),            # 2. p_nombre_usuario
-            hash_pass,                       # 3. p_password_hash
-            datos.get('email'),              # 4. p_email
-            'DOCENTE',                       # 5. p_rol_nombre
-            datos.get('rut'),                # 6. p_rut
-            datos.get('nombres'),            # 7. p_nombres
-            datos.get('apellido_paterno'),   # 8. p_ap_paterno
-            datos.get('apellido_materno'),   # 9. p_ap_materno
-            datos.get('especialidad_nivel'), # 10. p_especialidad_nivel
-            datos.get('fono'),               # 11. p_fono
-            datos.get('calle_numero'),       # 12. p_calle_num
-            datos.get('comuna'),             # 13. p_comuna
-            datos.get('region'),             # 14. p_region
-            datos.get('codigo_postal'),      # 15. p_cod_postal
-            datos.get('detalles'),           # 16. p_detalles_dir
-            datos.get('grupo_sangre'),       # 17. p_sangre
-            datos.get('discapacidad'),       # 18. p_discapacidad
-            datos.get('alergias'),           # 19. p_alergias
-            datos.get('enfermedades_cronicas'), # 20. p_enfermedades
-            datos.get('medicamentos')        # 21. p_medicamentos
+            admin_id,                        # 1
+            datos.get('usuario'),            # 2
+            hash_pass,                       # 3
+            datos.get('email'),              # 4
+            'DOCENTE',                       # 5
+            datos.get('rut'),                # 6
+            datos.get('nombres'),            # 7
+            datos.get('apellido_paterno'),   # 8
+            datos.get('apellido_materno'),   # 9
+            datos.get('especialidad_nivel'), # 10
+            datos.get('fono'),               # 11
+            datos.get('calle_numero'),       # 12
+            datos.get('comuna'),             # 13
+            datos.get('region'),             # 14
+            datos.get('codigo_postal'),      # 15
+            datos.get('detalles'),           # 16
+            datos.get('grupo_sangre'),       # 17
+            datos.get('discapacidad'),       # 18
+            datos.get('alergias'),           # 19
+            datos.get('enfermedades_cronicas'), # 20
+            datos.get('medicamentos'),       # 21
+            materias_array                   # 22. p_materias (INT[])
         )
         
-        # 4. LA LLAMADA SQL (Con los 21 %s correspondientes)
+        # 5. LA LLAMADA SQL (Asegúrate de que el SP en la BD acepte el 22vo parámetro)
         sql = """
             CALL sp_crear_perfil_docente_completo(
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
         """
         
@@ -53,8 +59,8 @@ def registrar_docente_db(datos, conn):
         conn.commit()
         cur.close()
         
-        print("   [DB_LOG]: Registro y Log completados con éxito.")
-        return True, "Docente registrado con éxito."
+        print(f"   [DB_LOG]: Registro completado. {len(materias_array)} materias vinculadas.")
+        return True, "Docente registrado y materias vinculadas con éxito."
         
     except Exception as e:
         print(f"   [DB_LOG]: ❌ ERROR: {str(e)}")
