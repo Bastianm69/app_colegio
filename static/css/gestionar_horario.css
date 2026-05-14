@@ -1,89 +1,283 @@
-/* static/gestionar_horarios.css */
+/* static/css/gestionar_horarios.css */
 
-/* Fondo general y ajustes tipográficos */
 body {
-    background-color: #f4f6f9;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 20px;
 }
 
-/* Tarjeta del Formulario */
-.form-card {
+.admin-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Header y Selector */
+.form-header, .course-selector-card {
+    background-color: #fff;
+    padding: 20px;
     border-radius: 8px;
-    border-top: 4px solid #0dcaf0 !important; /* Acento color info de Bootstrap */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
 }
 
-.form-select {
-    border-color: #ced4da;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.form-select:focus {
-    border-color: #0dcaf0;
-    box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+.form-header h2 { margin: 0; color: #2c3e50; }
+
+.btn-back {
+    text-decoration: none;
+    color: white;
+    background-color: #6c757d;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: bold;
 }
 
-/* --- ESTILOS DE LA TABLA DE CALENDARIO --- */
+.inline-form {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-.table-calendario {
-    table-layout: fixed; /* Asegura que todas las columnas de los días midan lo mismo */
+.inline-form select {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    width: 300px;
+}
+
+/* LA PARRILLA (TABLA) */
+.grid-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.horario-table {
     width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.table-calendario thead th {
-    background-color: #212529;
-    color: #ffffff;
-    text-align: center;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
+.horario-table th {
+    background-color: #0056b3;
+    color: white;
     padding: 12px;
-    border-bottom: 2px solid #0dcaf0;
+    text-align: center;
+    border: 1px solid #004494;
 }
 
-/* Columna de la izquierda (Módulos/Hora) */
-.col-bloque {
-    width: 15%; /* Más angosta que los días */
-}
-
-.celda-bloque {
-    background-color: #f8f9fa;
+.horario-table td {
+    border: 1px solid #dee2e6;
+    height: 90px;
     vertical-align: middle;
-    border-right: 2px solid #dee2e6;
+    text-align: center;
+    padding: 5px;
 }
 
-/* Celdas de los Días */
-.celda-dia {
-    height: 80px; /* Altura mínima para que parezca calendario */
-    vertical-align: top;
-    padding: 8px !important;
-    background-color: #ffffff;
-    transition: background-color 0.2s;
+.time-col { width: 120px; }
+.time-cell { background-color: #f8f9fa; font-weight: bold; color: #495057; }
+
+/* Botón Añadir y Cajas de Clase */
+.btn-add {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    border: 2px dashed #adb5bd;
+    color: #6c757d;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-/* Efecto hover sobre las celdas para ayudar visualmente al administrador */
-.celda-dia:hover {
-    background-color: #f1f8ff; /* Azul muy pálido */
-    cursor: crosshair;
+.btn-add:hover {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
 }
 
-/* Estilo para cuando inyectemos las clases dentro de las celdas (Uso futuro) */
-.clase-asignada {
-    background-color: #e0f2fe;
-    border-left: 4px solid #0ea5e9;
-    padding: 6px;
-    border-radius: 4px;
+.clase-box {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+}
+
+.asig-name { 
+    font-weight: bold; 
+    color: #155724 !important; /* El !important fuerza el color verde oscuro */
+    font-size: 0.9rem; 
+}
+
+.prof-name { 
+    font-size: 0.8rem; 
+    color: #28a745 !important; 
+    margin-top: 5px; 
+}
+
+/* MODAL FLOTANTE */
+.modal-overlay {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #0056b3;
+    padding-bottom: 10px;
+}
+
+.modal-header h3 { margin: 0; color: #0056b3; }
+
+.close-btn {
+    background: none; border: none; font-size: 24px;
+    cursor: pointer; color: #666;
+}
+
+.close-btn:hover { color: red; }
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+.form-group select { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+.form-group select:disabled { background-color: #e9ecef; }
+
+.btn-save {
+    width: 100%; padding: 12px; background-color: #28a745; color: white;
+    border: none; border-radius: 5px; font-size: 1rem; font-weight: bold;
+    cursor: pointer; margin-top: 10px;
+}
+.btn-save:hover { background-color: #218838; }
+
+.empty-state { text-align: center; color: #6c757d; padding: 40px; font-size: 1.2rem; }
+
+/* PANEL DE PROGRESO DE HORAS */
+.progress-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    margin-top: 20px;
+}
+
+.progress-card h3 {
+    margin-top: 0;
+    color: #0056b3;
+    border-bottom: 2px solid #0056b3;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.progress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.progress-item {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.materia-nombre {
+    font-weight: bold;
+    color: #333333 !important; /* Fuerza el color gris oscuro/casi negro */
+}
+
+.horas-conteo {
+    font-size: 0.9rem;
+    color: #6c757d !important;
+    font-weight: bold;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 12px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: #17a2b8; /* Azul claro por defecto */
+    transition: width 0.4s ease;
+}
+
+.progress-bar-fill.complete {
+    background-color: #28a745; /* Verde cuando se completa */
+}
+
+.progress-footer {
     font-size: 0.85rem;
-    margin-bottom: 4px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    text-align: right;
 }
 
-.clase-asignada .materia {
-    font-weight: 700;
-    color: #0369a1;
-    display: block;
+.text-success { color: #28a745; font-weight: bold; }
+.text-muted { color: #6c757d; }
+
+/* --- ELIMINADOR DE TEXTO INVISIBLE (SELECTORES) --- */
+
+/* 1. Forzamos el SELECT y todas sus opciones internas */
+select#modalMalla, 
+select#modalMalla option,
+select#modalDocente,
+select#modalDocente option {
+    color: #000000 !important;      /* Negro puro */
+    background-color: #ffffff !important; /* Fondo blanco */
+    font-weight: 500 !important;
 }
 
-.clase-asignada .profe-curso {
-    color: #475569;
-    font-size: 0.75rem;
+/* 2. Por si el navegador intenta poner un color gris cuando está deshabilitado */
+select:disabled {
+    color: #666666 !important;
+    background-color: #f0f0f0 !important;
+}
+
+/* 3. Aseguramos que el contenedor del Modal no interfiera */
+.modal-content {
+    color: #333333 !important;
+}
+
+/* 4. Estilo extra para que se note cuál tienes seleccionado */
+select#modalMalla:focus, 
+select#modalDocente:focus {
+    border: 2px solid #0056b3 !important;
+    outline: none;
 }

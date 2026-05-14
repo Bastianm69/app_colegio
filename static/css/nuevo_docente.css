@@ -50,15 +50,25 @@ h2 {
 
 .input-group { display: flex; flex-direction: column; }
 label { margin-bottom: 5px; font-weight: 600; color: #34495e; font-size: 14px; }
-input, textarea, select { 
+
+/* ==========================================================================
+   ¡AQUÍ ESTÁ LA CORRECCIÓN CRÍTICA PARA HACER VISIBLES LAS MATERIAS!
+   ========================================================================== */
+input, textarea, select, select option { 
     padding: 10px; 
     border: 1px solid #bdc3c7; 
     border-radius: 6px; 
     font-size: 15px; 
     transition: border-color 0.3s; 
     font-family: inherit;
+    color: #000000 !important; /* Fuerza la letra a negro */
+    background-color: #ffffff !important; /* Fuerza el fondo a blanco */
 }
-input:focus, textarea:focus, select:focus { outline: none; border-color: #3498db; }
+
+input:focus, textarea:focus, select:focus { 
+    outline: none; 
+    border-color: #3498db; 
+}
 
 .btn-submit {
     grid-column: 1 / -1;
@@ -88,8 +98,8 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: #3498db
 
 /* Estilo para el input del Rol que está bloqueado */
 .input-readonly {
-    background-color: #f0f0f0;
-    color: #555;
+    background-color: #f0f0f0 !important;
+    color: #555555 !important;
     cursor: not-allowed;
 }
 

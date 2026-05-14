@@ -54,7 +54,6 @@ def login():
         usuario_f = request.form.get('usuario')
         password_f = request.form.get('password')
         
-        # Lógica de IP Real
         ip_cliente = request.headers.get('X-Forwarded-For', request.remote_addr)
         if ip_cliente and ',' in ip_cliente:
             ip_cliente = ip_cliente.split(',')[0].strip()
@@ -64,18 +63,27 @@ def login():
             try: 
                 cur = conn.cursor()
                 
+                print("\n" + "="*50)
+                print(f"🕵️ LOG LOGIN: Buscando al usuario '{usuario_f}' en la BD...")
+                
                 # Búsqueda usando la función de la BD
                 cur.callproc('fn_obtener_datos_login', (usuario_f,))
                 user_found = cur.fetchone()
 
-                # Validamos contraseña con el hash
+                print(f"🕵️ LOG LOGIN: Respuesta cruda de la Base de Datos: {user_found}")
+                print("="*50 + "\n")
+
                 if user_found and check_password_hash(user_found[4], password_f):
                     
-                    # CAMBIO CLAVE: Cambiamos 'rol' por 'roles' para entender que ahora es una lista
                     id_usuario, nombre_u, roles, email_docente = user_found[:4]
                     
+                    print(f"🕵️ LOG LOGIN: Desempaquetando datos:")
+                    print(f"   - ID: {id_usuario}")
+                    print(f"   - Nombre: {nombre_u}")
+                    print(f"   - ROLES ENTREGADOS POR LA BD: {roles}")
+                    print(f"   - Email: {email_docente}")
+                    
                     session['pre_login_id'] = id_usuario
-                    # Guardamos la lista completa en la sesión
                     session['pre_login_roles'] = roles 
                     session['pre_login_nombre'] = nombre_u 
                     
@@ -87,7 +95,6 @@ def login():
                         error = "Tu cuenta no tiene un correo registrado."
                     else:
                         token = crear_token_db(id_usuario, conn)
-                        # Enviamos correo de LOGIN (es_recuperacion por defecto es False)
                         if token and enviar_correo_autorizacion(email_docente, token):
                             return redirect(url_for('auth_bp.verificar')) 
                         else:
@@ -103,6 +110,7 @@ def login():
                 conn.close()
                 
             except Exception as e:
+                print(f"❌ LOG ERROR CRÍTICO: {e}")
                 error = f"Error en la base de datos: {e}"
         else:
             error = "No hay conexión con la base de datos."
@@ -113,7 +121,6 @@ def login():
 @auth_bp.route('/verificar', methods=['GET', 'POST'])
 def verificar():
     if 'pre_login_id' not in session:
-        print("--- DEBUG: No hay pre_login_id en sesión, abortando ---")
         return redirect(url_for('auth_bp.login'))
 
     error = None
@@ -122,45 +129,51 @@ def verificar():
         user_id = session['pre_login_id']
         roles = session.get('pre_login_roles', []) 
         
-        print(f"--- DEBUG VERIFICACIÓN ---")
-        print(f"Usuario ID: {user_id}")
-        print(f"Roles en pre-login: {roles}")
-        print(f"Código ingresado: {codigo_web}")
-
         conn = obtener_conexion()
         es_codigo_valido = verificar_token_db(user_id, codigo_web, conn)
         conn.close()
         
-        print(f"¿Código válido según DB?: {es_codigo_valido}")
-
         if es_codigo_valido:
             # Seteamos la sesión definitiva
             session['user_id'] = user_id
             session['roles'] = roles 
             session['nombre_usuario'] = session.pop('pre_login_nombre', 'Usuario')
             
-            print(f"Sesión establecida: user_id={session['user_id']}, roles={session['roles']}")
-
             # Limpiamos temporales
             session.pop('pre_login_id', None)
             session.pop('pre_login_roles', None) 
             
-            # Lógica de redirección
-            if 'ADMIN' in roles:
-                print("--- DEBUG: Redirigiendo a PANEL ADMIN ---")
-                return redirect(url_for('admin_bp.admin_panel'))
-            elif 'DOCENTE' in roles: 
-                print("--- DEBUG: Redirigiendo a PANEL DOCENTE ---")
-                return redirect(url_for('docente_bp.panel_docente'))
+            # --- SUPER DEBUG (Mira la terminal de VS Code al loguearte) ---
+            print("="*50)
+            print(f"DEBUG: El usuario {user_id} intenta entrar.")
+            print(f"DEBUG: Contenido de ROLES: {roles} (Tipo: {type(roles)})")
+            print("="*50)
+
+            # Convertimos a una lista real de strings en mayúsculas para comparar exacto
+            if isinstance(roles, str):
+                lista_roles = [r.strip().upper() for r in roles.split(',')]
+            elif isinstance(roles, (list, tuple)):
+                lista_roles = [str(r).upper() for r in roles]
             else:
-                print(f"--- DEBUG: No se encontró un IF para los roles: {roles} ---")
+                lista_roles = [str(roles).upper()]
+
+            # --- REDIRECCIÓN PRIORIZANDO DOCENTE ---
+            # Si el sistema ve 'DOCENTE', lo manda para allá sin importar qué más tenga.
+            if 'DOCENTE' in lista_roles:
+                print("--- ENTRANDO COMO DOCENTE ---")
+                return redirect(url_for('docente_bp.panel_docente'))
+            
+            elif 'ADMIN' in lista_roles:
+                print("--- ENTRANDO COMO ADMINISTRADOR ---")
+                return redirect(url_for('admin_bp.admin_panel'))
+            
+            else:
+                print(f"--- ROL DESCONOCIDO: {lista_roles} ---")
                 error = "Tu cuenta no tiene un panel asignado."
         else:
-            print("--- DEBUG: El código no coincidió o expiró ---")
             error = "Código incorrecto o expirado."
 
     return render_template('verificar.html', error=error)
-
 
 @auth_bp.route('/logout')
 def logout():

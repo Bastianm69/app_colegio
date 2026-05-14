@@ -6,7 +6,7 @@ def registrar_docente_db(datos, conn, asignaturas_seleccionadas):
         cur = conn.cursor()
         print("   [DB_LOG]: Preparando parámetros para el SP (incluyendo materias)...")
         
-        # 1. Sacamos el ID del administrador
+        # 1. Sacamos el ID del administrador (Solo para validar seguridad, NO se envía a la BD)
         admin_id = session.get('user_id') 
 
         # 2. VALIDACIÓN DE SEGURIDAD
@@ -18,40 +18,38 @@ def registrar_docente_db(datos, conn, asignaturas_seleccionadas):
         hash_pass = generate_password_hash(datos.get('password'))
 
         # 3. CONVERSIÓN DE ASIGNATURAS A ARRAY DE ENTEROS
-        # Esto es lo que permite que el FOREACH en el SP funcione
         materias_array = [int(id_asig) for id_asig in asignaturas_seleccionadas] if asignaturas_seleccionadas else []
         
-        # 4. PARÁMETROS ACTUALIZADOS (22 en total)
+        # 4. PARÁMETROS ACTUALIZADOS (¡21 en total, tal como pide la BD!)
         params = (
-            admin_id,                        # 1
-            datos.get('usuario'),            # 2
-            hash_pass,                       # 3
-            datos.get('email'),              # 4
-            'DOCENTE',                       # 5
-            datos.get('rut'),                # 6
-            datos.get('nombres'),            # 7
-            datos.get('apellido_paterno'),   # 8
-            datos.get('apellido_materno'),   # 9
-            datos.get('especialidad_nivel'), # 10
-            datos.get('fono'),               # 11
-            datos.get('calle_numero'),       # 12
-            datos.get('comuna'),             # 13
-            datos.get('region'),             # 14
-            datos.get('codigo_postal'),      # 15
-            datos.get('detalles'),           # 16
-            datos.get('grupo_sangre'),       # 17
-            datos.get('discapacidad'),       # 18
-            datos.get('alergias'),           # 19
-            datos.get('enfermedades_cronicas'), # 20
-            datos.get('medicamentos'),       # 21
-            materias_array                   # 22. p_materias (INT[])
+            datos.get('usuario'),            # 1: p_usuario
+            hash_pass,                       # 2: p_password
+            datos.get('email'),              # 3: p_email
+            3,                               # 4: p_id_rol (Enviamos el NÚMERO 2 que representa al Rol Docente)
+            datos.get('rut'),                # 5: p_rut
+            datos.get('nombres'),            # 6: p_nombres
+            datos.get('apellido_paterno'),   # 7: p_ape_p
+            datos.get('apellido_materno'),   # 8: p_ape_m
+            datos.get('especialidad_nivel'), # 9: p_especialidad
+            datos.get('fono'),               # 10: p_fono
+            datos.get('calle_numero'),       # 11: p_calle
+            datos.get('comuna'),             # 12: p_comuna
+            datos.get('region'),             # 13: p_region
+            datos.get('codigo_postal'),      # 14: p_cod_postal
+            datos.get('detalles'),           # 15: p_detalles
+            datos.get('grupo_sangre'),       # 16: p_grupo_sangre
+            datos.get('discapacidad'),       # 17: p_discapacidad
+            datos.get('alergias'),           # 18: p_alergias
+            datos.get('enfermedades_cronicas'), # 19: p_cronicas
+            datos.get('medicamentos'),       # 20: p_medicamentos
+            materias_array                   # 21: p_materias (INT[])
         )
         
-        # 5. LA LLAMADA SQL (Asegúrate de que el SP en la BD acepte el 22vo parámetro)
+        # 5. LA LLAMADA SQL (Nombre correcto y exactamente 21 placeholders '%s')
         sql = """
-            CALL sp_crear_perfil_docente_completo(
+            CALL public.sp_registrar_docente_completo(
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
         """
         

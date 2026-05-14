@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Añadir Docente - Admin</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/nuevo_docente.css') }}">
+    
+    <style>
+        /* FIX CRÍTICO DE VISIBILIDAD: Fuerza el color negro en etiquetas, campos y selects */
+        .form-wrapper label, 
+        .form-wrapper input, 
+        .form-wrapper select, 
+        .form-wrapper select option,
+        .form-wrapper textarea {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+        }
+        /* Bloqueo visual para campos de solo lectura */
+        .input-readonly {
+            background-color: #f0f0f0 !important;
+            color: #555555 !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -104,9 +121,10 @@
                             {% if asignaturas %}
                                 {% for asig in asignaturas %}
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <input type="checkbox" name="asignaturas_habilitadas" value="{{ asig[0] }}" id="asig_{{ asig[0] }}" style="width: auto; margin: 0; cursor: pointer;">
-                                    <label for="asig_{{ asig[0] }}" style="margin: 0; font-weight: normal; cursor: pointer; user-select: none;">
-                                        {{ asig[1] }}
+                                    <input type="checkbox" name="asignaturas_habilitadas" value="{{ asig.id_asignatura | default(asig[0]) }}" id="asig_{{ asig.id_asignatura | default(asig[0]) }}" style="width: auto; margin: 0; cursor: pointer;">
+                                    
+                                    <label for="asig_{{ asig.id_asignatura | default(asig[0]) }}" style="margin: 0; font-weight: normal; cursor: pointer; user-select: none; color: #000000 !important;">
+                                        {{ asig.nombre_asignatura | default(asig[1]) }}
                                     </label>
                                 </div>
                                 {% endfor %}
