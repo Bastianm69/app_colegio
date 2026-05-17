@@ -128,7 +128,7 @@ def nuevo_alumno():
     return render_template('nuevo_alumno.html', cursos=cursos)
 
 # ==============================================================================
-# API AJAX: BUSCAR APODERADO
+# API AJAX: BUSCAR APODERADO POR RUT (CON BÚSQUEDA EN DOCENTES PARA REUTILIZAR DATOS)
 # ==============================================================================
 @admin_bp.route('/api/buscar-apoderado/<rut>', methods=['GET'])
 def api_buscar_apoderado(rut):
@@ -138,6 +138,8 @@ def api_buscar_apoderado(rut):
 
     try:
         cur = conn.cursor()
+        
+        # 1. Buscamos primero si ya existe en la tabla de APODERADOS
         cur.execute("""
             SELECT a.nombres, a.apellido_paterno, a.apellido_materno, a.parentesco, 
                    a.fono, a.email,
@@ -146,24 +148,52 @@ def api_buscar_apoderado(rut):
             LEFT JOIN public.direcciones d ON a.id_direccion = d.id_direccion
             WHERE a.rut = %s
         """, (rut,))
-        
-        datos = cur.fetchone()
-        cur.close()
-        conn.close()
+        datos_apo = cur.fetchone()
 
-        if datos:
+        if datos_apo:
+            print(f"--- API DEBUG: RUT {rut} encontrado como APODERADO ---")
             return jsonify({
                 'encontrado': True,
-                'nombres': datos[0], 'ape_p': datos[1], 'ape_m': datos[2],
-                'parentesco': datos[3], 'fono': datos[4], 'email': datos[5],
-                'calle': datos[6], 'comuna': datos[7], 'region': datos[8],
-                'cod_postal': datos[9] or '', 'detalles': datos[10] or ''
+                'origen': 'apoderado',
+                'nombres': datos_apo[0], 'ape_p': datos_apo[1], 'ape_m': datos_apo[2],
+                'parentesco': datos_apo[3], 'fono': datos_apo[4], 'email': datos_apo[5],
+                'calle': datos_apo[6], 'comuna': datos_apo[7], 'region': datos_apo[8],
+                'cod_postal': datos_apo[9] or '', 'detalles': datos_apo[10] or ''
             })
-        else:
-            return jsonify({'encontrado': False})
+        # 2. Si no es apoderado, buscamos en tu VISTA de DOCENTES
+
+        cur.execute("""
+            SELECT nombres, apellido_paterno, apellido_materno, fono, email,
+                   calle_numero, comuna, region, codigo_postal
+            FROM public.v_detalle_docentes
+            WHERE rut = %s
+        """, (rut,))
+        datos_doc = cur.fetchone()
+
+        if datos_doc:
+            print(f"--- API DEBUG: RUT {rut} encontrado como DOCENTE ---")
+            return jsonify({
+                'encontrado': True,
+                'origen': 'docente',
+                'nombres': datos_doc[0], 'ape_p': datos_doc[1], 'ape_m': datos_doc[2],
+                'parentesco': '',  # Se deja vacío
+                'fono': datos_doc[3], 'email': datos_doc[4],
+                'calle': datos_doc[5], 'comuna': datos_doc[6], 'region': datos_doc[7],
+                'cod_postal': datos_doc[8] or '', 
+                'detalles': '' # Lo mandamos vacío para que el formulario no de error de Javascript
+            })
+
+        # 3. Si no está en ningún lado
+        print(f"--- API DEBUG: RUT {rut} no existe en el sistema ---")
+        return jsonify({'encontrado': False})
 
     except Exception as e:
+        # Esto imprimirá el error real en tu terminal de VS Code si algo falla
+        print(f"--- API CRITICAL ERROR: {e} ---")
         return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
 
 # ==============================================================================
 # MÓDULO: VER FAMILIAS
