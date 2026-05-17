@@ -511,3 +511,14 @@ def api_docentes_disponibles():
     finally:
         cur.close()
         conn.close()
+
+# ==============================================================================
+# MÓDULO: ASIGNAR CURSOS (Placeholder para que no explote el menú)
+# ==============================================================================
+@admin_bp.route('/asignar-cursos')
+def asignar_cursos():
+    roles_usuario = session.get('roles', [])
+    if 'user_id' not in session or 'ADMIN' not in roles_usuario:
+        return redirect(url_for('auth_bp.login'))
+    
+    return "<h1>Módulo de Asignar Cursos en construcción</h1><a href='/admin'>Volver al inicio</a>"

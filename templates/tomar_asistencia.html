@@ -2,41 +2,80 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Asistencia - {{ curso }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tomar_asistencia.css') }}">
+    <title>Tomar Asistencia - Portal Docente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_docente.css') }}">
+    <style>
+        .radio-group { display: flex; gap: 10px; }
+        .radio-group label { cursor: pointer; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid #ddd; }
+        .radio-group input[type="radio"] { display: none; }
+        
+        /* Colores dinámicos al hacer clic */
+        .radio-group input[value="PRESENTE"]:checked + label { background-color: #2ecc71; color: white; border-color: #27ae60; }
+        .radio-group input[value="AUSENTE"]:checked + label { background-color: #e74c3c; color: white; border-color: #c0392b; }
+        .radio-group input[value="ATRASADO"]:checked + label { background-color: #f1c40f; color: white; border-color: #f39c12; }
+        
+        .input-obs { padding: 8px; width: 100%; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-guardar { background-color: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; float: right; margin-top: 15px; }
+        .btn-guardar:hover { background-color: #219a52; }
+    </style>
 </head>
 <body>
-    <a href="{{ url_for('docente_bp.panel_docente') }}">← Volver al panel</a>
-    
-    <h2>📋 Asistencia: {{ curso }}</h2>
-    <p>Fecha de hoy: {{ fecha }}</p>
+    <aside class="sidebar">
+        <div class="sidebar-header"><h2><i class="fas fa-chalkboard-teacher"></i> Portal Docente</h2></div>
+        <ul class="menu-lateral">
+            <li><a href="{{ url_for('docente_bp.panel_docente') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li><a href="{{ url_for('docente_bp.ver_horario') }}"><i class="fas fa-calendar-alt"></i> Mi Horario</a></li>
+            <li><a href="{{ url_for('docente_bp.asistencia_menu') }}" class="active"><i class="fas fa-user-check"></i> Asistencia</a></li>
+            <li><a href="{{ url_for('docente_bp.notas_menu') }}"><i class="fas fa-star"></i> Calificaciones</a></li>
+        </ul>
+        <a href="{{ url_for('auth_bp.logout') }}" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+    </aside>
 
-    <form method="POST">
-        <table>
-            <tr>
-                <th>N°</th>
-                <th>RUT</th>
-                <th>Alumno</th>
-                <th>Presente</th>
-                <th>Ausente</th>
-                <th>Atraso</th>
-                <th>Justificado</th>
-            </tr>
-            {% for alumno in alumnos %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ alumno[1] }}</td>
-                <td style="text-align: left;">{{ alumno[3] }} {{ alumno[4] }}, {{ alumno[2] }}</td>
-                
-                <td><input type="radio" name="estado_{{ alumno[0] }}" value="PRESENTE" checked></td>
-                <td><input type="radio" name="estado_{{ alumno[0] }}" value="AUSENTE"></td>
-                <td><input type="radio" name="estado_{{ alumno[0] }}" value="ATRASO"></td>
-                <td><input type="radio" name="estado_{{ alumno[0] }}" value="JUSTIFICADO"></td>
-            </tr>
-            {% endfor %}
-        </table>
+    <main class="main-content">
+        <div class="header-content">
+            <h1><i class="fas fa-clipboard-list" style="color: #3498db;"></i> Asistencia: {{ curso }}</h1>
+            <span style="font-size: 16px; font-weight: bold; color: #7f8c8d;">Fecha: {{ fecha }}</span>
+        </div>
 
-        <button type="submit" class="btn-guardar">Guardar Asistencia del Día</button>
-    </form>
+        <div class="card-info">
+            <form method="POST">
+                <table class="tabla-clases">
+                    <thead>
+                        <tr>
+                            <th>Nº</th>
+                            <th>Alumno</th>
+                            <th>Estado</th>
+                            <th>Observación (Opcional)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alumno in alumnos %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td><strong>{{ alumno[3] }} {{ alumno[4] }}, {{ alumno[2] }}</strong> <br> <small style="color:#7f8c8d;">RUT: {{ alumno[1] }}</small></td>
+                            <td>
+                                <div class="radio-group">
+                                    <input type="radio" id="p_{{ alumno[0] }}" name="estado_{{ alumno[0] }}" value="PRESENTE" checked>
+                                    <label for="p_{{ alumno[0] }}">Presente</label>
+
+                                    <input type="radio" id="a_{{ alumno[0] }}" name="estado_{{ alumno[0] }}" value="AUSENTE">
+                                    <label for="a_{{ alumno[0] }}">Ausente</label>
+
+                                    <input type="radio" id="at_{{ alumno[0] }}" name="estado_{{ alumno[0] }}" value="ATRASADO">
+                                    <label for="at_{{ alumno[0] }}">Atrasado</label>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" name="obs_{{ alumno[0] }}" class="input-obs" placeholder="Ej. Llegó tarde por tráfico">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn-guardar"><i class="fas fa-save"></i> Guardar Asistencia</button>
+            </form>
+        </div>
+    </main>
 </body>
 </html>

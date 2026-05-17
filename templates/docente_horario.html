@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Docente - AdminEscolar</title>
-    
+    <title>Mi Horario - Portal Docente</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_docente.css') }}">
 </head>
 <body>
@@ -16,8 +14,8 @@
             <h2><i class="fas fa-chalkboard-teacher"></i> Portal Docente</h2>
         </div>
         <ul class="menu-lateral">
-            <li><a href="{{ url_for('docente_bp.panel_docente') }}" class="active"><i class="fas fa-home"></i> Inicio</a></li>
-            <li><a href="{{ url_for('docente_bp.ver_horario') }}"><i class="fas fa-calendar-alt"></i> Mi Horario</a></li>
+            <li><a href="{{ url_for('docente_bp.panel_docente') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li><a href="{{ url_for('docente_bp.ver_horario') }}" class="active"><i class="fas fa-calendar-alt"></i> Mi Horario</a></li>
             <li><a href="{{ url_for('docente_bp.asistencia_menu') }}"><i class="fas fa-user-check"></i> Asistencia</a></li>
             <li><a href="{{ url_for('docente_bp.notas_menu') }}"><i class="fas fa-star"></i> Calificaciones</a></li>
         </ul>
@@ -26,35 +24,39 @@
 
     <main class="main-content">
         <div class="header-content">
-            <h1>Bienvenido(a), {{ nombre }}</h1>
-            <span style="background-color: #e8f4f8; color: #2980b9; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">
-                Sesión: DOCENTE
-            </span>
+            <h1><i class="fas fa-calendar-week" style="color: #3498db;"></i> Mi Horario Asignado</h1>
         </div>
 
         <div class="card-info">
-            <h3><i class="fas fa-book-open"></i> Mis Asignaturas Actuales</h3>
+            <p style="margin-bottom: 20px; color: #555;">Este es tu horario maestro asignado por la administración. Si tienes dudas con tus bloques de tiempo, contacta con Jefe Matta.</p>
             
-            {% if clases %}
+            {% if horario %}
                 <table class="tabla-clases">
                     <thead>
                         <tr>
+                            <th>Día</th>
+                            <th>Bloque de Tiempo</th>
                             <th>Curso</th>
-                            <th>Nivel</th>
                             <th>Asignatura</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for clase in clases %}
+                        {% for bloque in horario %}
                         <tr>
-                            <td><strong>{{ clase[1] }}</strong></td> <td><span class="badge-nivel">{{ clase[2] }}</span></td> <td>{{ clase[3] }}</td> </tr>
+                            <td><strong style="color: #2c3e50;">{{ bloque[0] }}</strong></td>
+                            <td><i class="far fa-clock" style="color: #7f8c8d;"></i> {{ bloque[1] }}</td>
+                            <td><span class="badge-nivel">{{ bloque[2] }}</span></td>
+                            <td>{{ bloque[3] }}</td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             {% else %}
-                <p style="color: #7f8c8d; font-style: italic; margin-top: 10px;">
-                    <i class="fas fa-exclamation-circle"></i> Aún no tienes cursos o asignaturas asignadas en el horario maestro para este año.
-                </p>
+                <div style="padding: 20px; background-color: #fdf2e9; border-left: 4px solid #e67e22; border-radius: 4px;">
+                    <p style="color: #d35400; font-weight: bold; margin-bottom: 0;">
+                        <i class="fas fa-info-circle"></i> Aún no tienes bloques horarios asignados para este semestre.
+                    </p>
+                </div>
             {% endif %}
         </div>
     </main>
