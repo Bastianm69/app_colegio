@@ -385,7 +385,7 @@ def asignar_materias():
     return render_template('asignar_materias.html', cursos=cursos, asignaturas=asignaturas, malla_agrupada=malla_agrupada)
 
 # ==============================================================================
-# MÓDULO: GESTIONAR HORARIOS (VISTA DE PARRILLA TOTALMENTE BASADA EN SP)
+# MÓDULO: GESTIONAR HORARIOS 
 # ==============================================================================
 @admin_bp.route('/gestionar-horarios', methods=['GET', 'POST'])
 def gestionar_horarios():
@@ -488,7 +488,7 @@ def gestionar_horarios():
                            dias=dias_semana)
 
 # ==============================================================================
-# API AJAX: FILTRO DINÁMICO ANTI-CHOQUES
+# API AJAX: OBTENER DOCENTES DISPONIBLES PARA UN BLOQUE HORARIO
 # ==============================================================================
 @admin_bp.route('/api/docentes-disponibles', methods=['GET'])
 def api_docentes_disponibles():
@@ -513,7 +513,7 @@ def api_docentes_disponibles():
         conn.close()
 
 # ==============================================================================
-# MÓDULO: ASIGNAR CURSOS (Placeholder para que no explote el menú)
+# MÓDULO: ASIGNAR CURSOS 
 # ==============================================================================
 @admin_bp.route('/asignar-cursos')
 def asignar_cursos():

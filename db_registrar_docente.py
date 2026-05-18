@@ -74,7 +74,6 @@ def obtener_todos_los_docentes(conn):
     return docentes
 
 def obtener_docente_por_rut(conn, rut):
-    """Llama a la función SQL para traer los datos del docente"""
     try:
         cur = conn.cursor()
         # Invocamos la función directamente

@@ -3,8 +3,7 @@ from db_connection import obtener_conexion
 from datetime import date 
 
 docente_bp = Blueprint('docente_bp', __name__)
-
-# --- FUNCIÓN AUXILIAR LIMPIA ---
+# esto es para colocar el nombre al docente en la paguina 
 def obtener_info_docente_sesion():
     """Llama a la BD para obtener ID y nombre del docente logueado."""
     conn = obtener_conexion()
@@ -33,7 +32,7 @@ def panel_docente():
     clases = []
     nombre_profesor = "Docente"
     
-    # 1. Obtenemos datos del profe usando la función auxiliar
+    # 1. Obtenemos datos del profe 
     info = obtener_info_docente_sesion()
     
     if info:
@@ -113,7 +112,7 @@ def asistencia_menu():
 
 
 # ==========================================================
-# 3.1 MÓDULO DE ASISTENCIA: TOMAR ASISTENCIA EN SALA
+# 3.1 MÓDULO DE ASISTENCIA: TOMAR ASISTENCIA
 # ==========================================================
 @docente_bp.route('/docente/asistencia/<int:id_curso>', methods=['GET', 'POST'])
 def tomar_asistencia(id_curso):
@@ -124,7 +123,7 @@ def tomar_asistencia(id_curso):
     hoy = date.today()
     alumnos = []
     
-    # Recibimos el nombre del curso por la URL (query parameter) para no hacer otra consulta SQL
+    # 
     nombre_curso = request.args.get('nombre_curso', 'Curso Seleccionado')
 
     conn = obtener_conexion()
