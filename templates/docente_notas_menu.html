@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calificaciones - Portal Docente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_docente.css') }}">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Portal Docente</h2>
+            <p>Panel de Control</p>
+        </div>
+        <ul class="menu-lateral">
+            <li class="menu-header">INICIO</li>
+            <li><a href="{{ url_for('docente_bp.panel_docente') }}"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="menu-header">PLANIFICACIÓN ACADÉMICA</li>
+            <li><a href="{{ url_for('docente_bp.ver_horario') }}"><i class="fas fa-calendar-alt"></i> Mi Horario</a></li>
+            <li class="menu-header">GESTIÓN DE ALUMNOS</li>
+            <li><a href="{{ url_for('docente_bp.asistencia_menu') }}"><i class="fas fa-user-check"></i> Asistencia</a></li>
+            <li><a href="{{ url_for('docente_bp.notas_menu') }}" class="active"><i class="fas fa-star"></i> Calificaciones</a></li>
+            <li class="menu-header">SISTEMA</li>
+            <li><a href="{{ url_for('auth_bp.logout') }}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header-content">
+            <h1><i class="fas fa-star" style="color: #f1c40f;"></i> Control de Calificaciones</h1>
+        </div>
+
+        <div class="card-info">
+            <p style="margin-bottom: 20px;">Selecciona la asignatura del curso correspondiente para ver el libro de clases virtual e ingresar evaluaciones.</p>
+            
+            {% if clases_notas %}
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    {% for clase in clases_notas %}
+                        <a href="{{ url_for('docente_bp.gestionar_notas', id_curso=clase[0], id_asignatura=clase[3], curso=clase[1], asignatura=clase[4]) }}" 
+                           style="background-color: #f8f9fa; border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-decoration: none; color: #2c3e50; width: 260px; transition: 0.3s; border-left: 4px solid #f1c40f;">
+                            <span class="badge-nivel" style="margin-bottom: 8px; display: inline-block;">{{ clase[2] }}</span>
+                            <strong style="display: block; font-size: 16px; margin-bottom: 5px;">{{ clase[1] }}</strong>
+                            <small style="color: #7f8c8d; display: block;"><i class="fas fa-book"></i> {{ clase[4] }}</small>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: #e67e22;"><i class="fas fa-info-circle"></i> No posees ramos activos asignados para registrar calificaciones.</p>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>
